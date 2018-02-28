@@ -47,7 +47,7 @@ A SourceryStruct is a racket-like structure that allows creation and access to s
 ```
 SQLSourceryProgram = Database (Definition | SourceryStruct | Expression)…
 
-Database           = (sourcery-db Variable String)
+Database           = (sourcery-db String)
 
 Definition         = (define Variable Expression) 
                    | (define (Variable Variable…) Expression)
