@@ -7,8 +7,7 @@
  #%top
  #%top-interaction
  sourcery-db
- sourcery-struct
- define)
+ sourcery-struct)
 
 ;; Language Requirements
 (require db
