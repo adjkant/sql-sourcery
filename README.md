@@ -8,18 +8,18 @@
 The basic language will aim to properly import a basic functionality similar to BSL, allow single level structure types (no structures within structures) to be defined and linked to a SQLite database (both saved and loaded), and allow for changes in the program to be propagated to the database according to basic user specifications.
 
 ##### Current Roadmap
-[x] Basic DB connectivity and spin-up
-[x] Table creation on structure definition
-[x] Add sourcery-id's to tables
-[x] add basic language constructurs
-[ ] implement structure language constructs
-[ ] translate mapped structures to ID's
-[ ] operate on structures/ids
-[ ] sourcery-map and sourcery-filter
+- [x] Basic DB connectivity and spin-up
+- [x] Table creation on structure definition
+- [x] Add sourcery-id's to tables
+- [x] add basic language constructurs
+- [ ] implement structure language constructs
+- [ ] translate mapped structures to ID's
+- [ ] operate on structures/ids
+- [ ] sourcery-map and sourcery-filter
 
-#####Unfinished:
-[ ] sourcery-structures only at top of file
-[ ] check existing table maps
+##### Unfinished:
+- [ ] sourcery-structures only at top of file
+- [ ] check existing table maps
 
 #### 2. Semantic Extension
 Once successful, we aim to extend the language with helpful constructs to allow programmers to write semantic programs with syntax and paradigms matching classic lisp conventions while maintaining the mapping and mutability of the database structures.
