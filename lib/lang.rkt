@@ -1,20 +1,45 @@
 #lang racket
 
 (provide
+ 
+ ;; Language Basics
  (rename-out (sourcery-begin #%module-begin))
  #%app
  #%datum
  #%top
  #%top-interaction
+
+ ;; Sourcery Constructs
  sourcery-db
- sourcery-struct)
+ sourcery-struct
+
+ ;; Basic Language Constructs
+ define
+ let
+ lambda λ
+
+ ;; Logical
+ or and not
+
+ ;; Numerical
+ + - * / modulo
+ number? integer? real?
+
+ ;; Strings
+ string? string=? string-length substring string-append
+
+ ;; Lists
+ cons first rest empty list length append
+ filter foldr andmap ormap
+ ;; need to overwite map
+ 
+ )
 
 ;; Language Requirements
 (require db
          (for-syntax syntax/parse
                      racket
                      db))
-
 
 ;; Confirm Program Shape
 (define-syntax sourcery-begin
@@ -53,14 +78,11 @@
 ;; Syntax Syntax Syntax -> String
 ;; Given the name of the structure and the fields/types, create a table creation string
 (define-for-syntax (table-creation-string struct-name fields types)
-  (let [(fields-decs (table-field-declarations fields types))]
+  (let [(fields-decs (string-append "sourcery_id INT PRIMARY KEY AUTOINCREMENT, "
+                                    (table-field-declarations fields types)))]
     (string-append
-     "CREATE TABLE IF NOT EXISTS"
-     " "
-     (id->string struct-name)
-     "("
-     (substring fields-decs 0 (- (string-length fields-decs) 2))
-     ")")))
+     "CREATE TABLE IF NOT EXISTS " (id->string struct-name)
+     "(" (substring fields-decs 0 (- (string-length fields-decs) 2)) ")")))
 
 ;; Syntax Syntax -> String
 ;; take the fields and types syntax objects and convert to a creation string for fields in a SQL table

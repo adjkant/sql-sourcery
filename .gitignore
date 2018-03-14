@@ -6,3 +6,6 @@ compiled
 .\#*
 \#*
 *~
+
+# Database files
+*.db
