@@ -16,6 +16,7 @@ The basic language will aim to properly import a basic functionality similar to 
 - [ ] translate mapped structures to ID's
 - [ ] operate on structures/ids
 - [ ] sourcery-map and sourcery-filter
+- [ ] add user testing library
 
 ##### Unfinished:
 - [ ] sourcery-structures only at top of file
