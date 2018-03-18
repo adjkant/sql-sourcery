@@ -43,6 +43,9 @@
                      racket
                      db))
 
+;; Reference Structure
+(define-struct sourcery-ref [table id])
+
 ;; Confirm Program Shape
 (define-syntax sourcery-begin
   (syntax-parser
@@ -54,7 +57,8 @@
             (sourcery-db path)
             (sourcery-struct name fields) ...
             prog ...)
-         #`(#%module-begin (error 'sqllite3 "SQLite 3 is not available on this system.")))]))
+         #`(#%module-begin
+            (error 'sqllite3 "SQLite 3 is not available on this system.")))]))
 
 
 ;; Ensure Existence of Database
@@ -72,29 +76,79 @@
     [(_ struct-name:id [(field type) ...])
      #:with name-create (format-id #'struct-name "~a-create" #'struct-name)
      #:with name-update (format-id #'struct-name "~a-update" #'struct-name)
+  
      #`(begin
-       ; Create the table (if it doesn't already exist in the db
-       #,(let
-           [(creation-string (table-creation-string #'struct-name
-                                                    #'(field ...)
-                                                    #'(type ...)))]
-         #`(query-exec sourcery-connection #,creation-string))
-       ; Create function to create a structure
-       (define-syntax name-create
+         ;; Check argument types
+         (let [(res (andmap #,(compose validate-type symbol->string syntax->datum)
+                            (syntax->list #'(type ...))))]
+           (if res
+               (void)
+               (error 'sourcery-struct "bad type given")))
+         
+         ;; Create the table (if it doesn't already exist in the db)
+         #,(let
+               [(creation-string (table-creation-string #'struct-name
+                                                        #'(field ...)
+                                                        #'(type ...)))]
+             #`(query-exec sourcery-connection #,creation-string))
+         
+         ;; Create function to create a structure
+         (define-syntax name-create
            (syntax-parser
              [(_ . args)
-              #`(query-exec sourcery-connection
-                          (format "INSERT INTO ~a (~a) VALUES (~a)"
-                                  (symbol->string `,(syntax->datum #'struct-name))
-                                  #,(comma-separate (map (λ (f)
-                                                           (id->string f))
-                                                         (syntax->list #'(field ...))))
-                                  #,(comma-separate (map syntax->datum (syntax->list #'args))))
-                                  )])))]))
+              #`(begin
+                  ;; Check input types
+                  (#,(create-arg-type-checker #'struct-name #'(field ...) #'(type ...)) #'args)
+                  ;; Insert into database
+                  (query-exec sourcery-connection
+                              #,(format "INSERT INTO ~a (~a) VALUES (~a)"
+                                        (id->string #'struct-name)
+                                        (comma-separate (map (λ (f)
+                                                               (id->string f))
+                                                             (syntax->list #'(field ...))))
+                                        (comma-separate (map format-sql-types
+                                                             (syntax->list #'args)))))
+                  ;; Return a sourcery reference for access to structure
+                  (sourcery-ref #,(id->string #'struct-name)
+                                (get-created-id #,(id->string #'struct-name))))])))]))
 
+(define-for-syntax (create-arg-type-checker struct fields types)
+  (λ (args)
+    (begin
+      (map (λ (f t a)
+             (let
+                 [(field (syntax->datum f))
+                  (type (symbol->string (syntax->datum t)))
+                  (arg (syntax->datum a))]
+               (if ((type->predicate type) arg)
+                   (void)
+                   (error (string-append (id->string struct) "-create:")
+                          (format "expected type ~a for field ~a: got ~v"
+                                  type field arg)))))
+           (syntax->list fields)
+           (syntax->list types)
+           (syntax->list args))
+      (void))))
+
+(define-for-syntax (format-sql-types stx)
+  (let [(dat (syntax->datum stx))] 
+    (cond [(integer? dat) dat]
+          [(string? dat) (format "\"~a\"" dat)]
+          [(boolean? dat) (if dat "\"TRUE\"" "\"FALSE\"")])))
+
+(define-for-syntax (type->predicate type)
+  (cond [(string=? type "INTEGER") integer?]
+        [(string=? type "STRING")  string?]
+        [(string=? type "BOOLEAN") boolean?]
+        [else (error 'sourcery-struct (format "Invalid type ~a" type))]))
+
+(define-for-syntax TYPES (list "INTEGER" "STRING" "BOOLEAN"))
+
+(define-for-syntax (validate-type type)
+  (ormap (λ (t) (string=? t type)) TYPES))
 
 ;; -----------------------------------------------------------------------
-;; SQL CREATE Generation
+;; SQL Query Generation
 
 ;; Syntax Syntax Syntax -> String
 ;; Given the name of the structure and the fields/types, create a table creation string
@@ -102,11 +156,12 @@
   (format "CREATE TABLE IF NOT EXISTS ~a (~a)"
           (id->string struct-name)
           (string-append "sourcery_id INTEGER PRIMARY KEY AUTOINCREMENT, "
-                         (comma-separate (map (λ (ft-pair)
-                                                (format "~a ~a"
-                                                        (id->string (first ft-pair))
-                                                        (sourcery-t->db-t (id->string (second ft-pair)))))
-                                              (map list (syntax->list fields) (syntax->list types)))))))
+                         (comma-separate
+                          (map (λ (ft-pair)
+                                 (format "~a ~a"
+                                         (id->string (first ft-pair))
+                                         (sourcery-t->db-t (id->string (second ft-pair)))))
+                               (map list (syntax->list fields) (syntax->list types)))))))
 
 ;; String -> String
 ;; convert a sourcery type to a database type
@@ -134,7 +189,13 @@
                0 (- (string-length comma-list) 2))))
 
 ;; -----------------------------------------------------------------------
+;; -----------------------------------------------------------------------
 ;; Sourcery Connection Runtime Library
+;; -----------------------------------------------------------------------
+;; -----------------------------------------------------------------------
+
+;; -----------------------------------------------------------------------
+;; Database Connection
 
 ;; The single database connection for a SQLSourcery program
 (define sourcery-connection #f)
@@ -144,3 +205,25 @@
   (begin
     (set! sourcery-connection conn)
     (void)))
+
+
+;; -----------------------------------------------------------------------
+;; SQL Query Utilities
+
+(define (get-created-id table-name)
+  (get-val-from-row (query-rows sourcery-connection
+                                (string-append
+                                 "SELECT MAX(sourcery_id) FROM "
+                                 table-name))
+                    0))
+
+;; -----------------------------------------------------------------------
+;; SQL Rows Parsing
+
+(define (get-val-from-row row idx)
+  (if (= 1 (length row))
+      (list-ref (first (rows->lists row)) idx)
+      (error 'sql-row-parse "number of rows given is not a single row")))
+
+(define (rows->lists rows)
+  (map vector->list rows))
