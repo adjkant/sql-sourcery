@@ -23,6 +23,7 @@ The basic language will aim to properly import a basic functionality similar to 
 ##### Unfinished:
 - [ ] verify all sourcery-structs are at the top level / start of file
 - [ ] check existing table declarations match current declarations
+- [ ] check field name validity and translate (no sourcery-id, no underscore, no question mark, etc)
 
 #### 2. Semantic Extension
 Once successful, we aim to extend the language with helpful constructs to allow programmers to write semantic programs with syntax and paradigms matching classic lisp conventions while maintaining the mapping and mutability of the database structures.
