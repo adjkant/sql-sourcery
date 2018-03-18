@@ -1,7 +1,7 @@
 #lang s-exp "lang.rkt"
 
 (sourcery-db "test.db")
-(sourcery-struct user [(name INT)])
+(sourcery-struct user [(name INTEGER)])
 
 1
 2

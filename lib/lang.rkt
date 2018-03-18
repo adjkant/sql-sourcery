@@ -8,6 +8,7 @@
  #%datum
  #%top
  #%top-interaction
+ require
 
  ;; Sourcery Constructs
  sourcery-db
@@ -78,7 +79,7 @@
 ;; Syntax Syntax Syntax -> String
 ;; Given the name of the structure and the fields/types, create a table creation string
 (define-for-syntax (table-creation-string struct-name fields types)
-  (let [(fields-decs (format "sourcery_id INT PRIMARY KEY AUTOINCREMENT, ~a"
+  (let [(fields-decs (format "sourcery_id INTEGER PRIMARY KEY AUTOINCREMENT, ~a"
                              (table-field-declarations fields types)))]
     (format "CREATE TABLE IF NOT EXISTS ~a (~a)"
             (id->string struct-name)
