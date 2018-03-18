@@ -21,6 +21,7 @@ The basic language will aim to properly import a basic functionality similar to 
 - [ ] add user testing library
 
 ##### Unfinished:
+- [ ] verify all sourcery-structs are at the top level / start of file
 - [ ] check existing table declarations match current declarations
 
 #### 2. Semantic Extension
