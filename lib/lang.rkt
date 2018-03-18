@@ -60,9 +60,9 @@
   (syntax-parser
     [(_ path:string)
      #'(set-conn!
-         (sqlite3-connect
-          #:database path
-          #:mode 'create))]))
+        (sqlite3-connect
+         #:database path
+         #:mode 'create))]))
 
 ;; Ensure Table Existence
 (define-syntax sourcery-struct
