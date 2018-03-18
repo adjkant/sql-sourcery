@@ -39,6 +39,7 @@
 ;; Language Requirements
 (require db
          (for-syntax syntax/parse
+                     racket/syntax
                      racket
                      db))
 
@@ -69,9 +70,28 @@
 (define-syntax sourcery-struct
   (syntax-parser
     [(_ struct-name:id [(field type) ...])
-     (let
-         [(creation-string (table-creation-string #'struct-name #'(field ...) #'(type ...)))]
-       #`(query-exec sourcery-connection #,creation-string))]))
+     #:with name-create (format-id #'struct-name "~a-create" #'struct-name)
+     #:with name-update (format-id #'struct-name "~a-update" #'struct-name)
+     #`(begin
+       ; Create the table (if it doesn't already exist in the db
+       #,(let
+           [(creation-string (table-creation-string #'struct-name
+                                                    #'(field ...)
+                                                    #'(type ...)))]
+         #`(query-exec sourcery-connection #,creation-string))
+       ; Create function to create a structure
+       (define-syntax name-create
+           (syntax-parser
+             [(_ . args)
+              #`(query-exec sourcery-connection
+                          (format "INSERT INTO ~a (~a) VALUES (~a)"
+                                  (symbol->string `,(syntax->datum #'struct-name))
+                                  #,(comma-separate (map (λ (f)
+                                                           (id->string f))
+                                                         (syntax->list #'(field ...))))
+                                  #,(comma-separate (map syntax->datum (syntax->list #'args))))
+                                  )])))]))
+
 
 ;; -----------------------------------------------------------------------
 ;; SQL CREATE Generation
