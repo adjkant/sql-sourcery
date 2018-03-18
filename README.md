@@ -12,15 +12,16 @@ The basic language will aim to properly import a basic functionality similar to 
 - [x] Table creation on structure definition
 - [x] Add sourcery-id's to tables
 - [x] add basic language constructurs
-- [ ] implement structure language constructs
-- [ ] translate mapped structures to ID's
-- [ ] operate on structures/ids
+- [X] translate mapped structures to sourcery-ref
+- [X] structure create
+- [ ] structure accessors
+- [ ] structure update
+- [ ] proper structure printing
 - [ ] sourcery-map and sourcery-filter
 - [ ] add user testing library
 
 ##### Unfinished:
-- [ ] sourcery-structures only at top of file
-- [ ] check existing table maps
+- [ ] check existing table declarations match current declarations
 
 #### 2. Semantic Extension
 Once successful, we aim to extend the language with helpful constructs to allow programmers to write semantic programs with syntax and paradigms matching classic lisp conventions while maintaining the mapping and mutability of the database structures.
@@ -36,7 +37,7 @@ Once this has been accomplished, we will consider developing the following featu
 
 If time permits, we will attempt to add the following:
 - [ ] Supporting multiple database types beyond SQLite
-- [ ] Give historical rollback ability of structures within the program
+- [ ] Give historical rollback ability of structures within the program / allow batching
 - [ ] Support multiple programs using a single SQLSourcery database at once
 - [ ] Life fulfillment
 
