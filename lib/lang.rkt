@@ -78,27 +78,25 @@
 ;; Syntax Syntax Syntax -> String
 ;; Given the name of the structure and the fields/types, create a table creation string
 (define-for-syntax (table-creation-string struct-name fields types)
-  (let [(fields-decs (string-append "sourcery_id INT PRIMARY KEY AUTOINCREMENT, "
-                                    (table-field-declarations fields types)))]
-    (string-append
-     "CREATE TABLE IF NOT EXISTS " (id->string struct-name)
-     "(" (substring fields-decs 0 (- (string-length fields-decs) 2)) ")")))
+  (let [(fields-decs (format "sourcery_id INT PRIMARY KEY AUTOINCREMENT, ~a"
+                             (table-field-declarations fields types)))]
+    (format "CREATE TABLE IF NOT EXISTS ~a (~a)"
+            (id->string struct-name)
+            (substring fields-decs 0 (- (string-length fields-decs) 2)))))
 
 ;; Syntax Syntax -> String
 ;; take the fields and types syntax objects and convert to a creation string for fields in a SQL table
 (define-for-syntax (table-field-declarations fields types)
   (foldl
    (λ (col-def so-far)
-     (string-append
-      col-def
-      ", "
-      so-far))
+     (format "~a, ~a"
+             col-def
+             so-far))
    ""
    (map (λ (ft-pair)
-          (string-append
-           (id->string (first ft-pair))
-           " "
-           (sourcery-t->db-t (id->string (second ft-pair)))))
+          (format "~a  ~a"
+                  (id->string (first ft-pair))
+                  (sourcery-t->db-t (id->string (second ft-pair)))))
         (map list (syntax->list fields) (syntax->list types)))))
 
 
