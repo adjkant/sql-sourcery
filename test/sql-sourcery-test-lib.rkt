@@ -13,6 +13,12 @@
  check-false
  check-success ; Alternate name for check-true
 
+ ;; Needed for testing only
+ void
+ display
+ print
+ write
+
  ;; String -> Void
  ;; create a database connection
  stest-conn
@@ -28,6 +34,10 @@
  ;; String -> Boolean
  ;; verify a table exists in the database
  stest-table?
+
+ ;; String -> Integer
+ ;; determine how many fields the table has
+ stest-fields
 
  ;; String String -> String
  ;; verify field exists and return a string representing its type
@@ -83,6 +93,12 @@
      (length (query-rows test-conn
                          (format "SELECT name FROM sqlite_master WHERE type='table' AND name='~a'"
                                  table-name)))))
+
+(define (stest-fields table-name)
+  (length (query-rows test-conn
+                      (format "SELECT * FROM pragma_table_info('~a')" table-name))))
+
+  
 
 (define (stest-field table-name field-name)
   (let
