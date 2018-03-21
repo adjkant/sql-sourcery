@@ -9,15 +9,14 @@
  check-not-equal?
  check-pred
  check-exn
- check-true
+ check-true check-success ; Alternate name for check-true
  check-false
- check-success ; Alternate name for check-true
 
  ;; Needed for testing only
  void
- display
- print
- write
+ displayln
+ println
+ writeln
 
  ;; String -> Void
  ;; create a database connection
