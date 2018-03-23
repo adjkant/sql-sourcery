@@ -10,7 +10,7 @@
 (stest-conn "test.db")
 
 ;; Test environment setup
-(define bobby (student-create "Bob Smith" 90 #false))
+(define bob (student-create "Bob Smith" 90 #false))
 (define ben (prof-create "Ben"))
 
 ;; Check table validity
@@ -30,21 +30,28 @@
 
 ;; structure predicates
 (check-true (prof? ben))
-(check-true (student? bobby))
-(check-false (prof? bobby))
+(check-true (student? bob))
+(check-false (prof? bob))
 (check-false (student? ben))
 (check-false (prof? 1))
 
 ;; structure access
-(check-equal? (student-name bobby) "Bob Smith")
-(check-equal? (student-grade bobby) 90)
-(check-equal? (student-failing bobby) #f)
+(check-equal? (student-name bob) "Bob Smith")
+(check-equal? (student-grade bob) 90)
+(check-equal? (student-failing bob) #f)
 (check-exn exn:fail? (λ () (student-name ben)) "expected student, given:")
 
+;; structure update
+(define bobby (student-update bob "Bobby Smith" 91 #true))
+(check-equal? bobby bob)
+(check-equal? (student-name bob) "Bobby Smith")
+(check-equal? (student-grade bob) 91)
+(check-equal? (student-failing bob) #true)
+
 ;; structure display
-(check-equal? (displayln bobby) (void))
-(check-equal? (println bobby) (void))
-(check-equal? (writeln bobby) (void))
+(check-equal? (displayln bob) (void))
+(check-equal? (println bob) (void))
+(check-equal? (writeln bob) (void))
 
 ;; Clear table
 (check-success (stest-clear-table "student"))

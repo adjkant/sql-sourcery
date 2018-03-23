@@ -1,7 +1,14 @@
 #lang racket
 
 (provide rows->lists
-         comma-separate)
+         comma-separate
+         id->string)
+
+
+;; Id -> String
+;; Convert an identifier to a string
+(define (id->string id)
+  (symbol->string `,(syntax->datum id)))
 
 ;; [List-of Vector] -> [List-of [List-of Any]]
 ;; turn a list of vectors into a list of lists

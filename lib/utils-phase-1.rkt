@@ -1,16 +1,11 @@
 #lang racket
 
-(provide id->string
-         first-failing
+(provide first-failing
          syntax-list->begin)
 
 (require syntax/parse
          (for-template racket))
-
-;; Id -> String
-;; Convert an identifier to a string
-(define (id->string id)
-  (symbol->string `,(syntax->datum id)))  
+  
 
 ;; [X -> Boolean] [X -> Y] [List-of X] -> [Maybe Y]
 ;; return the first item in the list to fail the predicate, translated by the given function

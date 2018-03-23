@@ -2,6 +2,7 @@
 
 (provide get-created-id
          get-val-from-row
+         create-set-values-list
          
          (for-syntax table-creation-string
                      gen-accessor-query-format))
@@ -9,6 +10,7 @@
 (require db
          "sourcery-connection.rkt"
          "utils.rkt"
+         "type-support.rkt"
          (for-syntax racket
                      "utils.rkt"
                      "utils-phase-1.rkt"))
@@ -52,6 +54,15 @@
                                  "SELECT MAX(sourcery_id) FROM "
                                  table-name))
                     0))
+
+
+;; Syntax Syntax -> [List-of String]
+;; create a set statement for the given fields and args
+(define (create-set-values-list fields args)
+  (begin
+    (map (λ (f a) (format "~a = ~a" f (format-sql-type a)))
+         (map id->string (syntax->list fields))
+         (syntax->list args))))
 
 ;; -----------------------------------------------------------------------
 ;; SQL Rows Parsing

@@ -1,6 +1,7 @@
 #lang racket
 
-(provide TYPES)  
+(provide TYPES
+         get-type-info)  
 
 ;; An SQLData is one of:
 ;; - String
@@ -46,3 +47,12 @@
               boolean?
               (λ (b) (if b "\"TRUE\"" "\"FALSE\""))
               (λ (b) (if (string=? "TRUE" b) #t #f)))))
+
+
+;; SQLTypeName -> SQLSourceryTypeInfo
+;; Get the type info for a SQLTypeName
+(define (get-type-info name)
+  (let [(type (filter (λ (ti) (string=? (first ti) name)) TYPES))]
+    (if (= 1 (length type))
+        (first type)
+        (error 'sourcery-struct (format "Invalid type: ~a" name)))))

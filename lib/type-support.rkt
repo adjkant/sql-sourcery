@@ -2,16 +2,15 @@
 
 (provide translate-types
          get-type-info
- 
+         format-sql-type
          (for-syntax validate-type
                      type->predicate
-                     format-sql-types
                      create-arg-type-checker))
 
 (require "types.rkt"
          (for-syntax racket
                      "types.rkt"
-                     "utils-phase-1.rkt"))
+                     "utils.rkt"))
 
 ;; -----------------------------------------------------------------------
 ;; Type Checking Generation
@@ -40,14 +39,6 @@
 ;; -----------------------------------------------------------------------
 ;; Basic Type Validation and Information Retreival
 
-;; SQLTypeName -> SQLSourceryTypeInfo
-;; Get the type info for a SQLTypeName
-(define (get-type-info name)
-  (let [(type (filter (λ (ti) (string=? (first ti) name)) TYPES))]
-    (if (= 1 (length type))
-        (first type)
-        (error 'sourcery-struct (format "Invalid type: ~a" name)))))
-
 ;; String -> Boolean
 ;; Validate that a given string is a SQLTypeName
 (define-for-syntax (validate-type type)
@@ -56,10 +47,8 @@
 ;; SQLTypeName -> [Any -> Boolean]
 ;; Turn a given type name into its matching predicate
 (define-for-syntax (type->predicate name)
-  (let [(name-type (filter (λ (t) (string=? (first t) name)) TYPES))]
-    (if (= (length name-type) 1)
-        (second (first name-type))
-        (error 'sourcery-struct (format "Invalid type: ~a" name)))))
+  (let [(type-info (get-type-info name))]
+    (second type-info)))
 
 ;; -----------------------------------------------------------------------
 ;; Type Formatting
@@ -67,7 +56,7 @@
 ;; Syntax -> SQLData
 ;; Format a piece of syntax that maps to a SupportedStructType into its matching format
 ;; by type as determined by type predicate
-(define-for-syntax (format-sql-types stx)
+(define (format-sql-type stx)
   (let* [(data (syntax->datum stx))
          (stx-type (filter (λ (t) ((second t) data)) TYPES))]
     (if (= (length stx-type) 1)
@@ -84,11 +73,10 @@
   (map translate-type values types))
 
 ;; SQLData SQLTypeName -> SupportedStructType
+;; translate the given SQLData  into it's SQLSourcery data form given its type
 (define (translate-type value type)
-  (let* [(t-info (filter (λ (t) (string=? type (first t))) TYPES))]
-    (if (= (length t-info) 1)
-        ((fourth (first t-info)) value)
-        (error 'sourcery-struct (format "Invalid translation type: ~a" type)))))
+  (let* [(t-info (get-type-info type))]
+    ((fourth t-info) value)))
 
   
 

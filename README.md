@@ -17,7 +17,7 @@ The basic language will aim to properly import a basic functionality similar to 
 - [X] proper structure printing
 - [X] structure accessors
 - [X] structure predicates
-- [ ] structure update
+- [X] structure update
 - [ ] structure delete
 - [ ] sourcery-map and sourcery-filter
 - [ ] sourcery-load

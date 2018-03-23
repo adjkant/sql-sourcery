@@ -49,6 +49,7 @@
                      racket
                      db
                      "sourcery-refs.rkt"
+                     "type-support.rkt"
                      "utils.rkt"
                      "utils-phase-1.rkt"))
 
@@ -135,7 +136,7 @@
                                         (id->string #'struct-name)
                                         (comma-separate (map id->string
                                                              (syntax->list #'(field ...))))
-                                        (comma-separate (map format-sql-types
+                                        (comma-separate (map format-sql-type
                                                              (syntax->list #'args)))))
                   
                   ;; Return a sourcery reference for access to structure
@@ -152,7 +153,26 @@
          ;; Define accessors
          #,(generate-accessors #'struct-name
                                #'(field ...)
-                               #'(type ...)))]))
+                               #'(type ...))
+
+         ;; Define updator
+         (define-syntax name-update
+           (syntax-parser
+             [(_ ref . args)
+              #`(begin
+                  ;; Check input types
+                  (#,(create-arg-type-checker #'struct-name #'(field ...) #'(type ...)) #'args)
+
+                  ;; Insert into database
+                  (query-exec sourcery-connection
+                              (format
+                               #,(format "UPDATE ~a SET ~~a WHERE sourcery_id = ~~a"
+                                         (id->string #'struct-name))
+                               (comma-separate (create-set-values-list #'(field ...) #'args))
+                               (sourcery-ref-id ref)))
+
+                  ;; Return the same reference
+                  ref)])))]))
 
 ;; -----------------------------------------------------------------------
 ;; Utilities for sourcery-struct
