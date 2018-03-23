@@ -11,28 +11,33 @@ The basic language will aim to properly import a basic functionality similar to 
 - [x] Basic DB connectivity and spin-up
 - [x] Table creation on structure definition
 - [x] Add sourcery-id's to tables
-- [x] add basic language constructurs
+- [x] add basic language constructs
 - [X] translate mapped structures to sourcery-ref
 - [X] structure create
-- [ ] structure accessors
+- [X] proper structure printing
+- [X] structure accessors
+- [X] structure predicates
 - [ ] structure update
-- [ ] proper structure printing
+- [ ] structure delete
 - [ ] sourcery-map and sourcery-filter
-- [ ] add user testing library
+- [ ] sourcery-load
 
 ##### Unfinished:
 - [ ] verify all sourcery-structs are at the top level / start of file
 - [ ] check existing table declarations match current declarations
-- [ ] check field name validity and translate (no sourcery-id, no underscore, no question mark, etc)
+- [ ] check field name validity and translate valid struct names (no sourcery-id, no underscore, no question mark, etc)
 
 #### 2. Semantic Extension
-Once successful, we aim to extend the language with helpful constructs to allow programmers to write semantic programs with syntax and paradigms matching classic lisp conventions while maintaining the mapping and mutability of the database structures.
+Once successful, we aim to extend the language with helpful constructs to allow programmers to write semantic programs with syntax and paradigms matching classic lisp conventions while maintaining the mapping and mutability of the database structures. Possible extensions include:
+- [ ] add user testing library
+- [ ] unmapped structures and abilty to easily map as needed
+- [ ] Allow database modification to be reset on error to avoid script errors causing database duplication or data vailidy corruption
 
 #### 3. Improving Usability and Increasing Complexity
 Once this has been accomplished, we will consider developing the following features:
 - [ ] Allowing classical structure use within programs for complex operations
+- [ ] Allowing user-defined atomic types
 - [ ] Supporting mappings for structures within structures
-- [ ] Allow automated testing of database mapping and functionality
 - [ ] Expand the language features to closer match Racket than BSL
 
 #### 4. Additional Ambitions
