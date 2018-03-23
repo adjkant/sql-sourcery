@@ -2,7 +2,8 @@
 
 (provide struct-field-values
          sourcery-struct-info
-         update-sourcery-struct-info)
+         update-sourcery-struct-info
+         (struct-out sourcery-ref))
 
 (require "sourcery-connection.rkt"
          "type-support.rkt"
@@ -10,6 +11,23 @@
          db
          racket/struct
          (for-syntax syntax/parse))
+
+;; -----------------------------------------------------------------------
+;; -----------------------------------------------------------------------
+;; sourcery-ref
+;; -----------------------------------------------------------------------
+;; -----------------------------------------------------------------------
+
+;; sourcery-ref: structure to represent table rows and print them as structures
+(struct sourcery-ref [table id]
+  #:methods gen:custom-write
+  [(define write-proc
+     (make-constructor-style-printer
+      (lambda (obj) (sourcery-ref-table obj))
+      (lambda (obj)
+        (append
+         (struct-field-values (sourcery-ref-table obj) (sourcery-ref-id obj))))))])
+
 
 ;; -----------------------------------------------------------------------
 ;; Sourcery References

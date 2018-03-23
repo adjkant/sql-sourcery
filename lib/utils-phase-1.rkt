@@ -1,9 +1,11 @@
 #lang racket
 
 (provide id->string
-         first-failing)
+         first-failing
+         syntax-list->begin)
 
-(require syntax/parse)
+(require syntax/parse
+         (for-template racket))
 
 ;; Id -> String
 ;; Convert an identifier to a string
@@ -20,4 +22,14 @@
              (first-failing proc return-form (rest lst))
              (return-form (first lst)))]))
 
+;; [List-of Syntax] -> Syntax
+;; combine a list of syntax into a single begin syntax
+(define (syntax-list->begin syntaxes)
+  (foldl
+   (λ (stx stx-so-far)
+     (syntax-parse stx-so-far
+       [((~literal begin) items ...)
+        #`(begin items ... #,stx)]))
+   #`(begin)
+   syntaxes))
 

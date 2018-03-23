@@ -25,7 +25,8 @@
 ;; structure creation
 (check-equal? (length (stest-rows "student" "sourcery_id" "1")) 1)
 (check-equal? (first (stest-rows "student" "sourcery_id" "1")) (list 1 "Bob Smith" 90 "FALSE"))
-#;(check-exn (student-create 90 90 #false) "expected type STRING for name: got 90")
+(check-exn exn:fail? (λ () (student-create 90 90 #false))
+           "expected type STRING for name: got 90")
 
 ;; structure predicates
 (check-true (prof? ben))
@@ -38,7 +39,7 @@
 (check-equal? (student-name bobby) "Bob Smith")
 (check-equal? (student-grade bobby) 90)
 (check-equal? (student-failing bobby) #f)
-#;(check-exn (student-name ben) "expected student, given:")
+(check-exn exn:fail? (λ () (student-name ben)) "expected student, given:")
 
 ;; structure display
 (check-equal? (displayln bobby) (void))

@@ -9,6 +9,7 @@
  check-not-equal?
  check-pred
  check-exn
+ exn:fail?
  check-true check-success ; Alternate name for check-true
  check-false
 

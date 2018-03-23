@@ -3,8 +3,7 @@
 (provide get-created-id
          get-val-from-row
          
-         (for-syntax sourcery-t->db-t
-                     table-creation-string
+         (for-syntax table-creation-string
                      gen-accessor-query-format))
 
 (require db
@@ -33,13 +32,8 @@
                           (map (λ (ft-pair)
                                  (format "~a ~a"
                                          (id->string (first ft-pair))
-                                         (sourcery-t->db-t (id->string (second ft-pair)))))
+                                         (id->string (second ft-pair))))
                                (map list (syntax->list fields) (syntax->list types)))))))
-
-;; String -> String
-;; convert a sourcery type to a database type
-(define-for-syntax (sourcery-t->db-t external-type-string)
-  external-type-string)
 
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------

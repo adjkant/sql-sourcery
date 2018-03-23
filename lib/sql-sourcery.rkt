@@ -48,26 +48,9 @@
                      racket/syntax
                      racket
                      db
+                     "sourcery-refs.rkt"
                      "utils.rkt"
                      "utils-phase-1.rkt"))
-
-
-;; -----------------------------------------------------------------------
-;; -----------------------------------------------------------------------
-;; sourcery-ref
-;; -----------------------------------------------------------------------
-;; -----------------------------------------------------------------------
-
-;; sourcery-ref: structure to represent table rows and print them as structures
-(define-struct sourcery-ref [table id]
-  #:methods gen:custom-write
-  [(define write-proc
-     (make-constructor-style-printer
-      (lambda (obj) (sourcery-ref-table obj))
-      (lambda (obj)
-        (append
-         (struct-field-values (sourcery-ref-table obj) (sourcery-ref-id obj))))))])
-
 
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
@@ -172,7 +155,7 @@
                                #'(type ...)))]))
 
 ;; -----------------------------------------------------------------------
-;; Utilities
+;; Utilities for sourcery-struct
 
 ;; Syntax Syntax Syntax -> Syntax
 ;; generate creation of accessors for structure definition
@@ -207,23 +190,4 @@
                         (format "expected ~a, given: ~a"
                                 #,#,(id->string struct-name)
                                 ref)))]))))
-
-
-;; -----------------------------------------------------------------------
-;; -----------------------------------------------------------------------
-;; Top Level Utilities
-;; -----------------------------------------------------------------------
-;; -----------------------------------------------------------------------
-
-;; [List-of Syntax] -> Syntax
-;; combine a list of syntax into a single begin syntax
-(define-for-syntax (syntax-list->begin syntaxes)
-  (foldl
-   (λ (stx stx-so-far)
-     (syntax-parse stx-so-far
-       [((~literal begin) items ...)
-        #`(begin items ... #,stx)]))
-   #`(begin)
-   syntaxes))
-
 
