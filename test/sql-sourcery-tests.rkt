@@ -13,6 +13,14 @@
 (define bob (student-create "Bob Smith" 90 #false))
 (define ben (prof-create "Ben"))
 
+(define steve (student-create "Steve Steve" 20 #true))
+(sourcery-load student)
+
+(student? bob)
+(sourcery-delete bob)
+(student? bob)
+
+
 #;(
 ;; Check table validity
 (check-true (stest-table? "student"))
@@ -65,10 +73,6 @@
 ;; Clear table
 (check-success (stest-clear-table "student"))
 )
-
-(student? bob)
-(sourcery-delete bob)
-(student? bob)
 
 ;; Delete testing database
 (stest-teardown "test.db")

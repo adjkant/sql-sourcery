@@ -3,6 +3,7 @@
 (provide struct-field-values
          sourcery-struct-info
          update-sourcery-struct-info
+         get-sourcery-struct-info
          (struct-out sourcery-ref))
 
 (require "sourcery-connection.rkt"
@@ -67,3 +68,10 @@
 (define (update-sourcery-struct-info to-add)
   (set! sourcery-struct-info (cons to-add sourcery-struct-info)))
 
+;; String -> SQLSourceryStructInfo
+;; get the given struct info by name
+(define (get-sourcery-struct-info name)
+  (let [(s-s-i (filter (λ (x) (string=? name (first x))) sourcery-struct-info))]
+    (if (= 1 (length s-s-i))
+        (first s-s-i)
+        (error 'sourcery-struct (format "struct does not exist: ~a" name)))))

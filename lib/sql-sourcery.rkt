@@ -14,6 +14,7 @@
  sourcery-db
  sourcery-struct
  sourcery-delete
+ sourcery-load
  
  ;; Basic Language Constructs
  define
@@ -216,6 +217,21 @@
                         (format "expected ~a, given: ~a"
                                 #,#,(id->string struct-name)
                                 ref)))]))))
+
+;; -----------------------------------------------------------------------
+;; -----------------------------------------------------------------------
+;; sourcery-load
+;; -----------------------------------------------------------------------
+;; -----------------------------------------------------------------------
+(define-syntax sourcery-load
+  (syntax-parser
+    [(_ tbl:id)
+     #`(let* [(tbl-string #,(id->string #'tbl))
+              (s-s-i (get-sourcery-struct-info tbl-string))]
+         (map (λ (r) (sourcery-ref tbl-string (first r)))
+              (rows->lists (query-rows sourcery-connection
+                                      (format "SELECT * FROM ~a"
+                                              tbl-string)))))]))
 
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------

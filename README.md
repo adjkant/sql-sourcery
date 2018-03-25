@@ -19,8 +19,9 @@ The basic language will aim to properly import a basic functionality similar to 
 - [X] structure predicates
 - [X] structure update
 - [X] structure delete
+- [X] sourcery-load
 - [ ] sourcery-map and sourcery-filter
-- [ ] sourcery-load
+
 
 ##### Unfinished:
 - [ ] verify all sourcery-structs are at the top level / start of file
