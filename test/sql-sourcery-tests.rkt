@@ -13,6 +13,7 @@
 (define bob (student-create "Bob Smith" 90 #false))
 (define ben (prof-create "Ben"))
 
+#;(
 ;; Check table validity
 (check-true (stest-table? "student"))
 (check-equal? (stest-fields "student") 4)
@@ -53,8 +54,21 @@
 (check-equal? (println bob) (void))
 (check-equal? (writeln bob) (void))
 
+;; structure deletion
+(check-true (student? bob))
+(check-true (sourcery-delete bob))
+(check-exn exn:fail? (λ () (sourcery-delete 1)) "Expected sourcery-struct, got: 1")
+(check-exn exn:fail? (λ () (student-name bob)) "sourcery reference does not exist")
+(check-false (student? bob))
+(check-true (sourcery-delete bob))
+
 ;; Clear table
 (check-success (stest-clear-table "student"))
+)
+
+(student? bob)
+(sourcery-delete bob)
+(student? bob)
 
 ;; Delete testing database
 (stest-teardown "test.db")

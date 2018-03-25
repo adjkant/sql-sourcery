@@ -12,7 +12,10 @@
  exn:fail?
  check-true check-success ; Alternate name for check-true
  check-false
-
+ test-begin
+ test-suite
+ run-test
+ 
  ;; Needed for testing only
  void
  displayln

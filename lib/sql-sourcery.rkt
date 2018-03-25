@@ -13,11 +13,14 @@
  ;; Sourcery Constructs
  sourcery-db
  sourcery-struct
-
+ sourcery-delete
+ 
  ;; Basic Language Constructs
  define
  let
  lambda λ
+ begin
+ void
 
  ;; Logical
  or and not
@@ -84,7 +87,6 @@
          #:database path
          #:mode 'create))]))
 
-
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
 ;; sourcery-struct
@@ -148,7 +150,11 @@
            (syntax-parser
              [(_ x)
               #`(and (sourcery-ref? x)
-                     (string=? (sourcery-ref-table x) #,(id->string #'struct-name)))]))
+                     (string=? (sourcery-ref-table x) #,(id->string #'struct-name))
+                     (= 1 (length (query-rows sourcery-connection
+                                              (format "SELECT * FROM ~a WHERE sourcery_id = ~a"
+                                                      (sourcery-ref-table x)
+                                                      (sourcery-ref-id x))))))]))
          
          ;; Define accessors
          #,(generate-accessors #'struct-name
@@ -204,10 +210,26 @@
                        (let [(type-translator
                               (fourth (get-type-info #,#,(symbol->string (syntax->datum type)))))]
                          (type-translator (first (vector->list (first query-result)))))
-                       (error "sourcery-ref " "sourcery reference does not exist")))
+                       (error "sourcery-ref: " "sourcery reference does not exist")))
                  
                  (error #,#,(string-append (id->string accessor-id) ":")
                         (format "expected ~a, given: ~a"
                                 #,#,(id->string struct-name)
                                 ref)))]))))
 
+;; -----------------------------------------------------------------------
+;; -----------------------------------------------------------------------
+;; sourcery-delete
+;; -----------------------------------------------------------------------
+;; -----------------------------------------------------------------------
+
+(define-syntax sourcery-delete
+  (syntax-parser
+    [(_ ref) #`(if (sourcery-ref? ref)
+                   (begin (query-exec sourcery-connection
+                                      (format "DELETE FROM ~a WHERE sourcery_id = ~a"
+                                              (sourcery-ref-table ref)
+                                              (sourcery-ref-id ref)))
+                          #t)
+                   (error 'sourcery-delete
+                          (format "Expected sourcery-struct, got: ~a" ref)))]))
