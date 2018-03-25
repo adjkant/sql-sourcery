@@ -19,7 +19,11 @@
 (student? bob)
 (sourcery-delete bob)
 (student? bob)
-
+(sourcery-filter-delete (λ (x) #f) (sourcery-load student))
+;(sourcery-filter-delete (λ (x) #t) (list bob 2))
+bob
+steve
+;(sourcery-filter-delete (λ (x) #t) 2)
 
 #;(
 ;; Check table validity

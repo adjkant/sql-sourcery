@@ -1,6 +1,7 @@
 #lang racket
 
 (provide get-created-id
+         get-row
          get-val-from-row
          create-set-values-list
          
@@ -66,6 +67,15 @@
 
 ;; -----------------------------------------------------------------------
 ;; SQL Rows Parsing
+
+;; String Number -> [Maybe [List-of SupportedStructType]]
+(define (get-row table id)
+  (let [(rows (query-rows sourcery-connection
+                          (format "SELECT * FROM ~a WHERE sourcery_id = ~a"
+                                  table id)))]
+    (if (= 1 (length rows))
+        (rest (vector->list (first rows)))
+        #false)))
 
 ;; [List-of Vector] Integer -> Any
 ;; get the value from a single row at the given index position

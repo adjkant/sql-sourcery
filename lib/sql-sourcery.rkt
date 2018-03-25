@@ -15,6 +15,7 @@
  sourcery-struct
  sourcery-delete
  sourcery-load
+ sourcery-filter-delete
  
  ;; Basic Language Constructs
  define
@@ -35,7 +36,7 @@
 
  ;; Lists
  cons first rest empty list length append
- filter foldr andmap ormap
+ filter foldr andmap ormap map
  ;; need to overwite map
  
  )
@@ -152,10 +153,7 @@
              [(_ x)
               #`(and (sourcery-ref? x)
                      (string=? (sourcery-ref-table x) #,(id->string #'struct-name))
-                     (= 1 (length (query-rows sourcery-connection
-                                              (format "SELECT * FROM ~a WHERE sourcery_id = ~a"
-                                                      (sourcery-ref-table x)
-                                                      (sourcery-ref-id x))))))]))
+                     (list? (get-row (sourcery-ref-table x) (sourcery-ref-id x))))]))
          
          ;; Define accessors
          #,(generate-accessors #'struct-name
@@ -223,6 +221,7 @@
 ;; sourcery-load
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
+
 (define-syntax sourcery-load
   (syntax-parser
     [(_ tbl:id)
@@ -230,8 +229,8 @@
               (s-s-i (get-sourcery-struct-info tbl-string))]
          (map (λ (r) (sourcery-ref tbl-string (first r)))
               (rows->lists (query-rows sourcery-connection
-                                      (format "SELECT * FROM ~a"
-                                              tbl-string)))))]))
+                                       (format "SELECT * FROM ~a"
+                                               tbl-string)))))]))
 
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
@@ -239,13 +238,29 @@
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
 
-(define-syntax sourcery-delete
-  (syntax-parser
-    [(_ ref) #`(if (sourcery-ref? ref)
-                   (begin (query-exec sourcery-connection
-                                      (format "DELETE FROM ~a WHERE sourcery_id = ~a"
-                                              (sourcery-ref-table ref)
-                                              (sourcery-ref-id ref)))
-                          #t)
-                   (error 'sourcery-delete
-                          (format "Expected sourcery-struct, got: ~a" ref)))]))
+(define (sourcery-delete ref)
+  (if (sourcery-ref? ref)
+      (begin (query-exec sourcery-connection
+                         (format "DELETE FROM ~a WHERE sourcery_id = ~a"
+                                 (sourcery-ref-table ref)
+                                 (sourcery-ref-id ref)))
+             #t)
+      (error 'sourcery-delete
+             (format "Expected sourcery-struct, got: ~a" ref))))
+
+;; -----------------------------------------------------------------------
+;; -----------------------------------------------------------------------
+;; sourcery-filter-delete
+;; -----------------------------------------------------------------------
+;; -----------------------------------------------------------------------
+
+(define (sourcery-filter-delete pred refs)
+  (if (and (list? refs) (andmap valid-sourcery-ref? refs))
+      (let [(to-delete (filter pred refs))
+            (return-list (filter (λ (x) (not (pred x))) refs))]
+        (begin
+          (map sourcery-delete to-delete)
+          return-list))
+      (error 'sourcery-filter-delete
+             (format "Expected list of sourcery-structs, got: ~a" refs))))
+

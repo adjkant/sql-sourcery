@@ -20,7 +20,8 @@ The basic language will aim to properly import a basic functionality similar to 
 - [X] structure update
 - [X] structure delete
 - [X] sourcery-load
-- [ ] sourcery-map and sourcery-filter
+- [X] sourcery-filter
+- [ ] sourcery-map / map
 
 
 ##### Unfinished:
@@ -33,6 +34,7 @@ Once successful, we aim to extend the language with helpful constructs to allow 
 - [ ] add user testing library
 - [ ] unmapped structures and abilty to easily map as needed
 - [ ] Allow database modification to be reset on error to avoid script errors causing database duplication or data vailidy corruption
+- [ ] Edit sourcery-load to include where / filtering of loaded results
 
 #### 3. Improving Usability and Increasing Complexity
 Once this has been accomplished, we will consider developing the following features:

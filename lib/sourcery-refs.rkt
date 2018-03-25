@@ -4,11 +4,13 @@
          sourcery-struct-info
          update-sourcery-struct-info
          get-sourcery-struct-info
-         (struct-out sourcery-ref))
+         (struct-out sourcery-ref)
+         valid-sourcery-ref?)
 
 (require "sourcery-connection.rkt"
          "type-support.rkt"
          "utils.rkt"
+         "sql.rkt"
          db
          racket/struct
          (for-syntax syntax/parse))
@@ -26,8 +28,7 @@
      (make-constructor-style-printer
       (lambda (obj) (sourcery-ref-table obj))
       (lambda (obj)
-        (append
-         (struct-field-values (sourcery-ref-table obj) (sourcery-ref-id obj))))))])
+        (struct-field-values (sourcery-ref-table obj) (sourcery-ref-id obj)))))])
 
 
 ;; -----------------------------------------------------------------------
@@ -41,13 +42,18 @@
      #`(let
            [(sourcery-struct-i
              (first (filter (λ (i) (string=? (first i) table))
-                            sourcery-struct-info)))]
-         (translate-types
-          (vector->list (first (query-rows sourcery-connection
-                                           (format "SELECT ~a FROM ~a WHERE sourcery_id = ~a"
-                                                   (comma-separate (second sourcery-struct-i))
-                                                   table id))))
-          (third sourcery-struct-i)))]))
+                            sourcery-struct-info)))
+            (row (get-row table id))]
+         (if row
+            (translate-types row (third sourcery-struct-i))
+            (list 'dead-reference)))]))
+
+;; Any -> Boolean
+;; determine if something is a valid sourcery ref
+(define (valid-sourcery-ref? x)
+  (and (sourcery-ref? x)
+       (get-row (sourcery-ref-table x) (sourcery-ref-id x))))
+  
 
 ;; -----------------------------------------------------------------------
 ;; SQLSourcery Struct Info
