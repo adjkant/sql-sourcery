@@ -4,8 +4,11 @@
 ;; Library Provide
 (provide
 
+ ;(all-from-out racket)
  ;; Basic Testing Functions
  check-equal?
+ check-eq?
+ check
  check-not-equal?
  check-pred
  check-exn
@@ -14,14 +17,18 @@
  check-false
  test-begin
  test-suite
- run-test
+ test-case
+ run-tests
+ action-compose
+ thunk-beginify
+ define-thunk-beginify
  
  ;; Needed for testing only
  void
  displayln
  println
  writeln
-
+ set!
  ;; String -> Void
  ;; create a database connection
  stest-conn
@@ -55,6 +62,8 @@
 ;; -----------------------------------------------------------------------
 ;; Internal Requirements
 (require rackunit
+         rackunit/text-ui
+         (for-syntax syntax/parse)
          db)
 
 
@@ -63,6 +72,26 @@
 (define (check-success x)
   (check-true x))
 
+(define (action-compose . actions)
+  (λ () (begin
+          (map (λ (a) (a)) actions)
+          (void))))
+
+(define-syntax thunk-beginify
+  (syntax-parser
+    [(_ actions ...)
+     #`(λ () (begin
+               actions ...
+               (void)))]))
+
+(define-syntax define-thunk-beginify
+  (syntax-parser
+    [(_ name:id actions ...)
+     #`(define name
+         (λ () (begin
+               actions ...
+               (void))))]))
+               
 
 ;; -----------------------------------------------------------------------
 ;; Runtime Library

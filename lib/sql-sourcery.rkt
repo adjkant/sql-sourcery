@@ -30,7 +30,7 @@
  ;; Numerical
  + - * / modulo
  number? integer? real?
-
+ > < = >= <=
  ;; Strings
  string? string=? string-length substring string-append
 
