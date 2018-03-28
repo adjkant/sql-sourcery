@@ -9,3 +9,6 @@ compiled
 
 # Database files
 *.db
+
+# Test Output Files
+test/outputs/

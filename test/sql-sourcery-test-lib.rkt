@@ -14,7 +14,6 @@
  exn:fail?
  check-true check-success ; Alternate name for check-true
  check-false
- void
  
  ;; Test Running Library
  (rename-out [test-suite-auto-run test-suite])
@@ -26,10 +25,10 @@
  define-thunk-beginify
  sql-sourcery-tests
  
- ;; Print / Display / Write
+ ;; Display Checks
  displayln
- println
- writeln
+ read-from-file
+ gen-output-file
 
  ;; Allowed Mutation for testing library
  set!
@@ -87,6 +86,13 @@
     [(_) #'(begin
              (define unsuccessful-tests (run-tests (make-test-suite "SQLSourcery Tests" all-tests)))
              (void))]))
+
+(define (read-from-file n path)
+  (call-with-input-file path
+    (lambda (in) (read-string n in))))
+
+(define (gen-output-file path)
+  (open-output-file path #:mode 'text #:exists 'replace))
                
 
 ;; -----------------------------------------------------------------------

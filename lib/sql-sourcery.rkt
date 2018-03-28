@@ -23,6 +23,7 @@
  lambda λ
  begin
  void
+ quote
 
  ;; Logical
  or and not

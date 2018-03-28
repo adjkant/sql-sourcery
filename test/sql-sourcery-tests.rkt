@@ -9,6 +9,11 @@
 (require "sql-sourcery-test-lib.rkt")
 (stest-conn "test.db")
 
+;; Defile Display/Print/Write files
+(define display-file (gen-output-file "outputs/display.txt"))
+(define dead-ref-display-file (gen-output-file "outputs/display-dead-ref.txt"))
+
+
 ;; -----------------------------------------------------------------------
 ;; Results, Setup, and Teardown Library
 
@@ -31,6 +36,12 @@
 
 (define-thunk-beginify su-update-bob-create-bobby
   (set! bobby (student-update bob "Bobby Smith" 91 #true)))
+
+(define-thunk-beginify printer-bob-display
+  (displayln bob display-file))
+
+(define-thunk-beginify printer-bob-dead-ref
+  (displayln bob dead-ref-display-file))
 
 (define-thunk-beginify su-delete-bob
   (sourcery-delete bob))
@@ -111,22 +122,20 @@
  (check-equal? (student-failing bob) #true))
 
 (test-suite
- "Structure Display"
- #:before su-create-all
- #:after  td-complete 
- (check-equal? (displayln bob) (void))
- (check-equal? (println bob) (void))
- (check-equal? (writeln bob) (void)))
+ "Structure Printer"
+ #:before (action-compose su-create-all printer-bob-display)
+ #:after  td-complete
+ (check-equal? (read-from-file 50 "outputs/display.txt") "#<student: Bob Smith 90 #f>"))
 
 (test-suite
  "Structure Deletion"
- #:before (action-compose su-create-all su-update-bob-create-bobby su-delete-bob)
+ #:before (action-compose su-create-all su-update-bob-create-bobby su-delete-bob printer-bob-dead-ref)
  #:after  td-complete
  (check-exn exn:fail? (λ () (sourcery-delete 1)) "Expected sourcery-struct, got: 1")
  (check-exn exn:fail? (λ () (student-name bob)) "sourcery reference does not exist")
  (check-exn exn:fail? (λ () (student-name bobby)) "sourcery reference does not exist")
  (check-false (student? bob))
- (check-equal? (println bob) (void))
+ (check-equal? (read-from-file 50 "outputs/display-dead-ref.txt") "#<student: dead-reference>")
  (check-true (sourcery-delete bob))
  (check-equal? (length (stest-rows "student" "sourcery_id" "1")) 0))
 
@@ -166,6 +175,7 @@
  #:before su-create-all
  #:after  td-complete
  )
+
 
 ;; Run all tests
 (sql-sourcery-tests)
