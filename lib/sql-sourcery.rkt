@@ -39,7 +39,6 @@
  cons first rest empty list length append
  second third fourth fifth sixth seventh eighth
  filter foldr andmap ormap map
- ;; need to overwite map
  
  )
 
