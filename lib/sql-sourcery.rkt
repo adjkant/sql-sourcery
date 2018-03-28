@@ -36,6 +36,7 @@
 
  ;; Lists
  cons first rest empty list length append
+ second third fourth fifth sixth seventh eighth
  filter foldr andmap ormap map
  ;; need to overwite map
  
@@ -256,8 +257,8 @@
 
 (define (sourcery-filter-delete pred refs)
   (if (and (list? refs) (andmap valid-sourcery-ref? refs))
-      (let [(to-delete (filter pred refs))
-            (return-list (filter (λ (x) (not (pred x))) refs))]
+      (let [(return-list (filter pred refs))
+            (to-delete (filter (λ (x) (not (pred x))) refs))]
         (begin
           (map sourcery-delete to-delete)
           return-list))
