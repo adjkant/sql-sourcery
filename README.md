@@ -21,7 +21,6 @@ The basic language will aim to properly import a basic functionality similar to 
 - [X] structure delete
 - [X] sourcery-load
 - [X] sourcery-filter
-- [ ] sourcery-map / map
 
 
 ##### Unfinished:
@@ -35,11 +34,13 @@ Once successful, we aim to extend the language with helpful constructs to allow 
 - [ ] add user testing library
 - [ ] unmapped structures and abilty to easily map as needed
 - [ ] Allow database modification to be reset on error to avoid script errors causing database duplication or data vailidy corruption
-- [ ] Edit sourcery-load to include where / filtering of loaded results
+- [ ] Create if exists structure create option
+- [ ] Allowing classical structure use within programs for complex operations
+
 
 #### 3. Improving Usability and Increasing Complexity
 Once this has been accomplished, we will consider developing the following features:
-- [ ] Allowing classical structure use within programs for complex operations
+- [ ] Edit sourcery-load to include where / filtering of loaded results
 - [ ] Allowing user-defined atomic types
 - [ ] Supporting mappings for structures within structures
 - [ ] Expand the language features to closer match Racket than BSL
@@ -47,9 +48,6 @@ Once this has been accomplished, we will consider developing the following featu
 #### 4. Additional Ambitions
 
 If time permits, we will attempt to add the following:
-- [ ] Supporting multiple database types beyond SQLite
-- [ ] Give historical rollback ability of structures within the program / allow batching
-- [ ] Support multiple programs using a single SQLSourcery database at once
 - [ ] Life fulfillment
 
 
