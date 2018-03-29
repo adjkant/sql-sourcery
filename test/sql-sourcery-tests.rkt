@@ -193,10 +193,9 @@
  #:after  td-complete
  )
 
-
 ;; Run all tests
 (sql-sourcery-tests)
 
-;; Delete testing database
+;; Clear tables and delete testing database
 (stest-teardown "test.db")
 

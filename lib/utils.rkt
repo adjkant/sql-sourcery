@@ -25,5 +25,7 @@
                                so-far))
                      ""
                      l))]
-    (substring comma-list
-               0 (- (string-length comma-list) 2))))
+    (if (> (string-length comma-list) 2)
+        (substring comma-list
+                   0 (- (string-length comma-list) 2))
+        "")))
