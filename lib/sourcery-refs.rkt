@@ -4,6 +4,7 @@
          sourcery-struct-info
          update-sourcery-struct-info
          get-sourcery-struct-info
+         sourcery-struct-exists?
          (struct-out sourcery-ref)
          valid-sourcery-ref?)
 
@@ -45,8 +46,8 @@
                             sourcery-struct-info)))
             (row (get-row table id))]
          (if row
-            (translate-types row (third sourcery-struct-i))
-            (list 'dead-reference)))]))
+             (translate-types row (third sourcery-struct-i))
+             (list 'dead-reference)))]))
 
 ;; Any -> Boolean
 ;; determine if something is a valid sourcery ref
@@ -73,6 +74,12 @@
 ;; add the given struct info to the runtime environment
 (define (update-sourcery-struct-info to-add)
   (set! sourcery-struct-info (cons to-add sourcery-struct-info)))
+
+;; String -> Boolean
+;; check if the given name is an existing sourcery struct
+(define (sourcery-struct-exists? name)
+  (let [(s-s-i (filter (λ (x) (string=? name (first x))) sourcery-struct-info))]
+    (= 1 (length s-s-i))))
 
 ;; String -> SQLSourceryStructInfo
 ;; get the given struct info by name

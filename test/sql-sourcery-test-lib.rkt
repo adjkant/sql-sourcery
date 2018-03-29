@@ -33,6 +33,10 @@
  ;; Allowed Mutation for testing library
  set!
 
+ ;; Checking compile-time errors
+ compile
+ syntax
+
  ;; Database Help
  stest-conn
  stest-clear-table

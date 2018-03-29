@@ -84,6 +84,23 @@
  (check-equal? (stest-field "student" "failing") "BOOLEAN")
  (check-equal? (stest-field "student" "eh") void))
 
+
+(test-suite
+ "Structure Definition Errors"
+ #:before su-none
+ #:after  td-none
+ (check-exn exn:fail? (λ () (begin (sourcery-struct blank []) 1))
+            "sourcery-struct must have at least one field"))
+
+(test-suite
+ "Structure Definition Compile Time Errors"
+ #:before su-none
+ #:after  td-none
+ (check-exn exn:fail?
+            (λ () (compile #'(begin 
+                               (sourcery-struct student [(name STRING)])
+                               (sourcery-struct student [(name STRING)]))))))
+
 (test-suite
  "Structure Creation"
  #:before su-create-all

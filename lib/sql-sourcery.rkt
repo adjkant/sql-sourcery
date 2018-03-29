@@ -70,15 +70,14 @@
 (define-syntax sourcery-begin
   (syntax-parser
     [(_ ((~literal sourcery-db) path:string)
-        ((~literal sourcery-struct) name fields) ...
         prog ...)
      (if (sqlite3-available?)
          #`(#%module-begin
             (sourcery-db path)
-            (sourcery-struct name fields) ...
             prog ...)
          #`(#%module-begin
-            (error 'sqllite3 "SQLite 3 is not available on this system.")))]))
+            (error 'sqllite3 (string-append "SQLite 3 is required to run SQLSourcery and is " 
+                                            "not available on this system"))))]))
 
 ;; sourcery-db
 ;; create a database connection
@@ -105,6 +104,19 @@
      #:with name-pred   (format-id #'struct-name "~a?" #'struct-name)
      #:with name-update (format-id #'struct-name "~a-update" #'struct-name)
      #`(begin
+
+         ;; Check struct does not already exist         
+         #,(if (sourcery-struct-exists? (id->string #'struct-name))
+               (error (string-append (id->string #'struct-name) ":")
+                      "multiple sourcery-struct definitions")
+               (void))
+
+         ;; Check struct has at least one field
+         (if (zero? #,(length (syntax->list #'(field ...))))
+             (error #,(string-append (id->string #'struct-name) ":")
+                    "sourcery-struct must have at least one field")
+             (void))
+         
          ;; Check types of fields in structure defition
          (let [(res #,(first-failing (compose validate-type symbol->string syntax->datum)
                                      (compose symbol->string syntax->datum)
@@ -114,18 +126,49 @@
                (error #,(string-append (id->string #'struct-name) ":")
                       (format "bad type given in sourcery-struct definition ~a: ~a"
                               #,(id->string #'struct-name) res))))
-         
-         ;; Create the table (if it doesn't already exist in the db)
-         #,(let
-               [(creation-string (table-creation-string #'struct-name
-                                                        #'(field ...)
-                                                        #'(type ...)))]
-             #`(query-exec sourcery-connection #,creation-string))
 
-         ;; update sourcery-struct-info with structure
+         ;; Check structure definition does not overwrite previous declaration in database
+         (let [(table-count (first
+                             (first
+                              (rows->lists
+                               (query-rows sourcery-connection
+                                           (format (string-append "SELECT count(*) FROM sqlite_master"
+                                                                  " WHERE type='table' AND name='~a'")
+                                                   #,(id->string #'struct-name)))))))]
+           (if (= table-count 1)
+               (let [(table-info (map (λ (r) (list (second r) (third r)))
+                                      (rows->lists (query-rows sourcery-connection
+                                                               (format "pragma table_info(~a)"
+                                                                       #,(id->string #'struct-name))))))
+                     (dec-info
+                      (cons (list "sourcery_id" "INTEGER")
+                            (map list
+                                 (list (symbol->string (syntax->datum #'field)) ...)
+                                 (list (symbol->string (syntax->datum #'type)) ...))))]
+                 (if (and (= (length table-info) (length dec-info)) (andmap equal? table-info dec-info))
+                     (void)
+                     (error #,(string-append (id->string #'struct-name) ":")
+                            (format "defition does not match database table: expects (sourcery-struct ~a ~a"
+                                    #,(id->string #'struct-name)
+                                    (rest table-info)))))
+               (begin
+                 ;; Create the table
+                 #,(let
+                       [(creation-string (table-creation-string #'struct-name
+                                                                #'(field ...)
+                                                                #'(type ...)))]
+                     #`(query-exec sourcery-connection #,creation-string))
+                 (void))))
+
+         ;; update sourcery-struct-info at phase 0
          (update-sourcery-struct-info (list (symbol->string (syntax->datum #'struct-name))
                                             (list (symbol->string (syntax->datum #'field)) ...)
                                             (list (symbol->string (syntax->datum #'type)) ...)))
+
+         ;; update sourcery-struct-info at phase 1
+         #,(update-sourcery-struct-info (list (symbol->string (syntax->datum #'struct-name))
+                                              (map id->string (syntax->list #'(field ...)))
+                                              (map id->string (syntax->list #'(type ...)))))
          
          ;; Define create
          (define-syntax name-create
