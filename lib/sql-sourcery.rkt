@@ -137,18 +137,22 @@
                                                    #,(id->string #'struct-name)))))))]
            (if (= table-count 1)
                (let [(table-info (map (λ (r) (list (second r) (third r)))
-                                      (rows->lists (query-rows sourcery-connection
-                                                               (format "pragma table_info(~a)"
-                                                                       #,(id->string #'struct-name))))))
+                                      (rows->lists
+                                       (query-rows sourcery-connection
+                                                   (format "pragma table_info(~a)"
+                                                           #,(quote-field
+                                                              (id->string #'struct-name)))))))
                      (dec-info
                       (cons (list "sourcery_id" "INTEGER")
                             (map list
                                  (list (symbol->string (syntax->datum #'field)) ...)
                                  (list (symbol->string (syntax->datum #'type)) ...))))]
-                 (if (and (= (length table-info) (length dec-info)) (andmap equal? table-info dec-info))
+                 (if (and (= (length table-info) (length dec-info))
+                          (andmap equal? table-info dec-info))
                      (void)
                      (error #,(string-append (id->string #'struct-name) ":")
-                            (format "defition does not match database table: expects (sourcery-struct ~a ~a"
+                            (format (string-append "defition does not match database table: "
+                                                   "expects (sourcery-struct ~a ~a")
                                     #,(id->string #'struct-name)
                                     (rest table-info)))))
                (begin
@@ -181,8 +185,8 @@
                   ;; Insert into database
                   (query-exec sourcery-connection
                               #,(format "INSERT INTO ~a (~a) VALUES (~a)"
-                                        (id->string #'struct-name)
-                                        (comma-separate (map id->string
+                                        (quote-field (id->string #'struct-name))
+                                        (comma-separate (map (λ (f) (quote-field (id->string f)))
                                                              (syntax->list #'(field ...))))
                                         (comma-separate (map format-sql-type
                                                              (syntax->list #'args)))))
@@ -216,7 +220,7 @@
                   (query-exec sourcery-connection
                               (format
                                #,(format "UPDATE ~a SET ~~a WHERE sourcery_id = ~~a"
-                                         (id->string #'struct-name))
+                                         (quote-field (id->string #'struct-name)))
                                (comma-separate (create-set-values-list #'(field ...) #'args))
                                (sourcery-ref-id ref)))
 
@@ -246,8 +250,10 @@
                  (let [(query-result
                         (query-rows sourcery-connection
                                     (format #,(gen-accessor-query-format
-                                               (symbol->string (syntax->datum #'#,field))
-                                               (symbol->string (syntax->datum #'#,struct-name)))
+                                               (quote-field
+                                                (symbol->string (syntax->datum #'#,field)))
+                                               (quote-field
+                                                (symbol->string (syntax->datum #'#,struct-name))))
                                             (sourcery-ref-id ref))))]
                    (if (= (length query-result) 1)
                        (let [(type-translator
@@ -274,7 +280,7 @@
          (map (λ (r) (sourcery-ref tbl-string (first r)))
               (rows->lists (query-rows sourcery-connection
                                        (format "SELECT * FROM ~a"
-                                               tbl-string)))))]))
+                                               (quote-field tbl-string))))))]))
 
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
@@ -286,7 +292,7 @@
   (if (sourcery-ref? ref)
       (begin (query-exec sourcery-connection
                          (format "DELETE FROM ~a WHERE sourcery_id = ~a"
-                                 (sourcery-ref-table ref)
+                                 (quote-field (sourcery-ref-table ref))
                                  (sourcery-ref-id ref)))
              #t)
       (error 'sourcery-delete

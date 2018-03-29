@@ -2,7 +2,9 @@
 
 (provide rows->lists
          comma-separate
-         id->string)
+         id->string
+         quote-field
+         unquote-field)
 
 
 ;; Id -> String
@@ -29,3 +31,17 @@
         (substring comma-list
                    0 (- (string-length comma-list) 2))
         "")))
+
+;; -----------------------------------------------------------------------
+;; Racket Struct Names and SQL Table Field Names
+
+;; String -> String
+;; translate a racket field name to a sql field name
+(define (quote-field f)
+  (string-append "\"" f "\""))
+
+
+;; String -> String
+;; translate a sql field name to a racket field name
+(define (unquote-field f)
+  (substring f 1 (- (length f) 2)))

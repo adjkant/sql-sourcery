@@ -13,6 +13,17 @@
 (define display-file (gen-output-file "outputs/display.txt"))
 (define dead-ref-display-file (gen-output-file "outputs/display-dead-ref.txt"))
 
+(sourcery-struct student-1 [(name STRING) (grade INTEGER) (failing? BOOLEAN)])
+(define s (student-1-create "grade" 1 #true))
+(student-1-failing? (student-1-update s "grade" 1 #false))
+(sourcery-delete s)
+(sourcery-load student-1)
+(sourcery-delete (student-1-create "a" 2 #true))
+(sourcery-load student-1)
+;(sourcery-load student-1)
+; :(
+;(student-1-update (student-1-create "student 2" 1 #true) "student 2" 1 #false)
+;(sourcery-load student-1)
 
 ;; -----------------------------------------------------------------------
 ;; Results, Setup, and Teardown Library

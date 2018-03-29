@@ -40,12 +40,12 @@
         
         (list "STRING"
               string?
-              (λ (s) (format "\"~a\"" s))
+              (λ (s) (format "'~a'" s))
               identity)
         
         (list "BOOLEAN"
               boolean?
-              (λ (b) (if b "\"TRUE\"" "\"FALSE\""))
+              (λ (b) (if b "'TRUE'" "'FALSE'"))
               (λ (b) (if (string=? "TRUE" b) #t #f)))))
 
 

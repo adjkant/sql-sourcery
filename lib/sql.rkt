@@ -29,12 +29,12 @@
 ;; Given the name of the structure and the fields/types, create a table creation string
 (define-for-syntax (table-creation-string struct-name fields types)
   (format "CREATE TABLE IF NOT EXISTS ~a (~a)"
-          (id->string struct-name)
+          (quote-field (id->string struct-name))
           (string-append "sourcery_id INTEGER PRIMARY KEY AUTOINCREMENT, "
                          (comma-separate
                           (map (λ (ft-pair)
                                  (format "~a ~a"
-                                         (id->string (first ft-pair))
+                                         (quote-field (id->string (first ft-pair)))
                                          (id->string (second ft-pair))))
                                (map list (syntax->list fields) (syntax->list types)))))))
 
@@ -53,7 +53,7 @@
   (get-val-from-row (query-rows sourcery-connection
                                 (string-append
                                  "SELECT MAX(sourcery_id) FROM "
-                                 table-name))
+                                 (quote-field table-name)))
                     0))
 
 
@@ -62,7 +62,7 @@
 (define (create-set-values-list fields args)
   (begin
     (map (λ (f a) (format "~a = ~a" f (format-sql-type a)))
-         (map id->string (syntax->list fields))
+         (map (λ (f) (quote-field (id->string f))) (syntax->list fields))
          (syntax->list args))))
 
 ;; -----------------------------------------------------------------------
@@ -72,7 +72,7 @@
 (define (get-row table id)
   (let [(rows (query-rows sourcery-connection
                           (format "SELECT * FROM ~a WHERE sourcery_id = ~a"
-                                  table id)))]
+                                  (quote-field table) id)))]
     (if (= 1 (length rows))
         (rest (vector->list (first rows)))
         #false)))
