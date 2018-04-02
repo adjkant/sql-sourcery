@@ -13,18 +13,6 @@
 (define display-file (gen-output-file "outputs/display.txt"))
 (define dead-ref-display-file (gen-output-file "outputs/display-dead-ref.txt"))
 
-(sourcery-struct student-1 [(name STRING) (grade INTEGER) (failing? BOOLEAN)])
-(define s (student-1-create "grade" 1 #true))
-(student-1-failing? (student-1-update s "grade" 1 #false))
-(sourcery-delete s)
-(sourcery-load student-1)
-(sourcery-delete (student-1-create "a" 2 #true))
-(sourcery-load student-1)
-;(sourcery-load student-1)
-; :(
-;(student-1-update (student-1-create "student 2" 1 #true) "student 2" 1 #false)
-;(sourcery-load student-1)
-
 ;; -----------------------------------------------------------------------
 ;; Results, Setup, and Teardown Library
 
@@ -37,7 +25,7 @@
 
 ;; Setup Functions
 (define-thunk-beginify su-create-bob
-  (set! bob (student-create "Bob Smith" 90 #false)))
+  (set! bob (student-create "Bob Smith" (* 45 2) #false)))
 
 (define-thunk-beginify su-create-ben
   (set! ben (prof-create "Ben")))
@@ -46,7 +34,16 @@
   (set! steve (student-create "Steve Steve" 20 #true)))
 
 (define-thunk-beginify su-update-bob-create-bobby
-  (set! bobby (student-update bob "Bobby Smith" 91 #true)))
+  (set! bobby (student-update bob "Bobby Smith" (+ (student-grade bob) 1) #true)))
+
+(define-thunk-beginify su-update-while-create-joe-john
+  (student-update (student-create "Temp Student" -1 #false)
+                  "Joe"
+                  (student-grade (student-create "John" 100 #f))
+                  #t))
+
+(define-thunk-beginify su-create-joe-delete
+  (sourcery-delete (student-create "No Name" (student-grade (student-create "Joe" 1 #true)) #false)))
 
 (define-thunk-beginify printer-bob-display
   (displayln bob display-file))
@@ -150,6 +147,14 @@
  (check-equal? (student-failing bob) #true))
 
 (test-suite
+ "Structure Creation Within Update"
+ #:before su-update-while-create-joe-john
+ #:after  td-complete
+ (check-equal? (length (stest-rows "student" "sourcery_id" "1")) 1)
+ (check-equal? (first (stest-rows "student" "sourcery_id" "1")) (list 1 "Joe" 100 "TRUE"))
+ (check-equal? (first (stest-rows "student" "sourcery_id" "2")) (list 2 "John" 100 "FALSE")))
+
+(test-suite
  "Structure Printer"
  #:before (action-compose su-create-all printer-bob-display)
  #:after  td-complete
@@ -166,6 +171,13 @@
  (check-equal? (read-from-file 50 "outputs/display-dead-ref.txt") "#<student: dead-reference>")
  (check-true (sourcery-delete bob))
  (check-equal? (length (stest-rows "student" "sourcery_id" "1")) 0))
+
+(test-suite
+ "Creation Within Deletion"
+ #:before su-create-joe-delete
+ #:after  td-complete
+ (check-equal? (length (stest-rows "student" "sourcery_id" "1")) 1)
+ (check-equal? (first (stest-rows "student" "sourcery_id" "1")) (list 1 "Joe" 1 "TRUE")))
 
 (test-suite
  "sourcery-load"

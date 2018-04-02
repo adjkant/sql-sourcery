@@ -15,25 +15,26 @@
 ;; -----------------------------------------------------------------------
 ;; Type Checking Generation
 
-;; Syntax Syntax Syntax -> [Syntax Syntax Syntax -> Void]
+;; Syntax Syntax Syntax -> [[List-of Any] String -> Void]
 ;; create function to check arguments for structure creation
-(define-for-syntax (create-arg-type-checker struct fields types)
-  (λ (args)
-    (begin
-      (map (λ (f t a)
-             (let
-                 [(field (syntax->datum f))
-                  (type (symbol->string (syntax->datum t)))
-                  (arg (syntax->datum a))]
-               (if ((type->predicate type) arg)
+(define-for-syntax (create-arg-type-checker struct-name fields types)
+  (let* [(field-strings (map symbol->string (map syntax->datum (syntax->list fields))))
+         (type-strings (map symbol->string (map syntax->datum (syntax->list types))))
+         (type-preds (map type->predicate type-strings))
+         (struct-name-string (id->string struct-name))]
+    (λ (args call)
+      (begin
+        (map (λ (f t pred a)
+               (if (pred a)
                    (void)
-                   (error (string-append (id->string struct) "-create:")
+                   (error (string-append struct-name-string "-" call ":")
                           (format "expected type ~a for ~a: got ~v"
-                                  type field arg)))))
-           (syntax->list fields)
-           (syntax->list types)
-           (syntax->list args))
-      (void))))
+                                  t f a))))
+             field-strings
+             type-strings
+             type-preds
+             args)
+        (void)))))
 
 
 ;; -----------------------------------------------------------------------
@@ -53,12 +54,11 @@
 ;; -----------------------------------------------------------------------
 ;; Type Formatting
 
-;; Syntax -> SQLData
+;; SupportedStructType -> SQLData
 ;; Format a piece of syntax that maps to a SupportedStructType into its matching format
 ;; by type as determined by type predicate
-(define (format-sql-type stx)
-  (let* [(data (syntax->datum stx))
-         (stx-type (filter (λ (t) ((second t) data)) TYPES))]
+(define (format-sql-type data)
+  (let* [(stx-type (filter (λ (t) ((second t) data)) TYPES))]
     (if (= (length stx-type) 1)
         ((third (first stx-type)) data)
         (error 'sourcery-struct (format "Invalid type: ~a" data)))))

@@ -57,13 +57,13 @@
                     0))
 
 
-;; Syntax Syntax -> [List-of String]
+;; Syntax [List-of SupportedStructType] -> [List-of String]
 ;; create a set statement for the given fields and args
 (define (create-set-values-list fields args)
   (begin
     (map (λ (f a) (format "~a = ~a" f (format-sql-type a)))
          (map (λ (f) (quote-field (id->string f))) (syntax->list fields))
-         (syntax->list args))))
+         args)))
 
 ;; -----------------------------------------------------------------------
 ;; SQL Rows Parsing

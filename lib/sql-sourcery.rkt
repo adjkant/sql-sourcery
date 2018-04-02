@@ -103,129 +103,133 @@
      #:with name-create (format-id #'struct-name "~a-create" #'struct-name)
      #:with name-pred   (format-id #'struct-name "~a?" #'struct-name)
      #:with name-update (format-id #'struct-name "~a-update" #'struct-name)
-     #`(begin
+     (let [(struct-arg-checker (create-arg-type-checker #'struct-name #'(field ...) #'(type ...)))]
+       #`(begin
 
-         ;; Check struct does not already exist         
-         #,(if (sourcery-struct-exists? (id->string #'struct-name))
-               (error (string-append (id->string #'struct-name) ":")
-                      "multiple sourcery-struct definitions")
-               (void))
+           ;; Check struct does not already exist         
+           #,(if (sourcery-struct-exists? (id->string #'struct-name))
+                 (error (string-append (id->string #'struct-name) ":")
+                        "multiple sourcery-struct definitions")
+                 (void))
 
-         ;; Check struct has at least one field
-         (if (zero? #,(length (syntax->list #'(field ...))))
-             (error #,(string-append (id->string #'struct-name) ":")
-                    "sourcery-struct must have at least one field")
-             (void))
-         
-         ;; Check types of fields in structure defition
-         (let [(res #,(first-failing (compose validate-type symbol->string syntax->datum)
-                                     (compose symbol->string syntax->datum)
-                                     (syntax->list #'(type ...))))]
-           (if (equal? #false res)
-               (void)
+           ;; Check struct has at least one field
+           (if (zero? #,(length (syntax->list #'(field ...))))
                (error #,(string-append (id->string #'struct-name) ":")
-                      (format "bad type given in sourcery-struct definition ~a: ~a"
-                              #,(id->string #'struct-name) res))))
-
-         ;; Check structure definition does not overwrite previous declaration in database
-         (let [(table-count (first
-                             (first
-                              (rows->lists
-                               (query-rows sourcery-connection
-                                           (format (string-append "SELECT count(*) FROM sqlite_master"
-                                                                  " WHERE type='table' AND name='~a'")
-                                                   #,(id->string #'struct-name)))))))]
-           (if (= table-count 1)
-               (let [(table-info (map (λ (r) (list (second r) (third r)))
-                                      (rows->lists
-                                       (query-rows sourcery-connection
-                                                   (format "pragma table_info(~a)"
-                                                           #,(quote-field
-                                                              (id->string #'struct-name)))))))
-                     (dec-info
-                      (cons (list "sourcery_id" "INTEGER")
-                            (map list
-                                 (list (symbol->string (syntax->datum #'field)) ...)
-                                 (list (symbol->string (syntax->datum #'type)) ...))))]
-                 (if (and (= (length table-info) (length dec-info))
-                          (andmap equal? table-info dec-info))
-                     (void)
-                     (error #,(string-append (id->string #'struct-name) ":")
-                            (format (string-append "defition does not match database table: "
-                                                   "expects (sourcery-struct ~a ~a")
-                                    #,(id->string #'struct-name)
-                                    (rest table-info)))))
-               (begin
-                 ;; Create the table
-                 #,(let
-                       [(creation-string (table-creation-string #'struct-name
-                                                                #'(field ...)
-                                                                #'(type ...)))]
-                     #`(query-exec sourcery-connection #,creation-string))
-                 (void))))
-
-         ;; update sourcery-struct-info at phase 0
-         (update-sourcery-struct-info (list (symbol->string (syntax->datum #'struct-name))
-                                            (list (symbol->string (syntax->datum #'field)) ...)
-                                            (list (symbol->string (syntax->datum #'type)) ...)))
-
-         ;; update sourcery-struct-info at phase 1
-         #,(update-sourcery-struct-info (list (symbol->string (syntax->datum #'struct-name))
-                                              (map id->string (syntax->list #'(field ...)))
-                                              (map id->string (syntax->list #'(type ...)))))
+                      "sourcery-struct must have at least one field")
+               (void))
          
-         ;; Define create
-         (define-syntax name-create
-           (syntax-parser
-             [(_ . args)
-              #`(begin
-                  ;; Check input types
-                  (#,(create-arg-type-checker #'struct-name #'(field ...) #'(type ...)) #'args)
-                  
-                  ;; Insert into database
-                  (query-exec sourcery-connection
-                              #,(format "INSERT INTO ~a (~a) VALUES (~a)"
-                                        (quote-field (id->string #'struct-name))
-                                        (comma-separate (map (λ (f) (quote-field (id->string f)))
-                                                             (syntax->list #'(field ...))))
-                                        (comma-separate (map format-sql-type
-                                                             (syntax->list #'args)))))
-                  
-                  ;; Return a sourcery reference for access to structure
-                  (sourcery-ref #,(id->string #'struct-name)
-                                (get-created-id #,(id->string #'struct-name))))]))
+           ;; Check types of fields in structure defition
+           (let [(res #,(first-failing (compose validate-type symbol->string syntax->datum)
+                                       (compose symbol->string syntax->datum)
+                                       (syntax->list #'(type ...))))]
+             (if (equal? #false res)
+                 (void)
+                 (error #,(string-append (id->string #'struct-name) ":")
+                        (format "bad type given in sourcery-struct definition ~a: ~a"
+                                #,(id->string #'struct-name) res))))
 
-         ;; Define predicate
-         (define-syntax name-pred
-           (syntax-parser
-             [(_ x)
-              #`(and (sourcery-ref? x)
-                     (string=? (sourcery-ref-table x) #,(id->string #'struct-name))
-                     (list? (get-row (sourcery-ref-table x) (sourcery-ref-id x))))]))
+           ;; Check structure definition does not overwrite previous declaration in database
+           (let [(table-count (first
+                               (first
+                                (rows->lists
+                                 (query-rows sourcery-connection
+                                             (format (string-append "SELECT count(*) "
+                                                                    "FROM sqlite_master WHERE "
+                                                                    "type='table' AND name='~a'")
+                                                     #,(id->string #'struct-name)))))))]
+             (if (= table-count 1)
+                 (let [(table-info (map (λ (r) (list (second r) (third r)))
+                                        (rows->lists
+                                         (query-rows sourcery-connection
+                                                     (format "pragma table_info(~a)"
+                                                             #,(quote-field
+                                                                (id->string #'struct-name)))))))
+                       (dec-info
+                        (cons (list "sourcery_id" "INTEGER")
+                              (map list
+                                   (list (symbol->string (syntax->datum #'field)) ...)
+                                   (list (symbol->string (syntax->datum #'type)) ...))))]
+                   (if (and (= (length table-info) (length dec-info))
+                            (andmap equal? table-info dec-info))
+                       (void)
+                       (error #,(string-append (id->string #'struct-name) ":")
+                              (format (string-append "defition does not match database table: "
+                                                     "expects (sourcery-struct ~a ~a")
+                                      #,(id->string #'struct-name)
+                                      (rest table-info)))))
+                 (begin
+                   ;; Create the table
+                   #,(let
+                         [(creation-string (table-creation-string #'struct-name
+                                                                  #'(field ...)
+                                                                  #'(type ...)))]
+                       #`(query-exec sourcery-connection #,creation-string))
+                   (void))))
+
+           ;; update sourcery-struct-info at phase 0
+           (update-sourcery-struct-info (list (symbol->string (syntax->datum #'struct-name))
+                                              (list (symbol->string (syntax->datum #'field)) ...)
+                                              (list (symbol->string (syntax->datum #'type)) ...)))
+
+           ;; update sourcery-struct-info at phase 1
+           #,(update-sourcery-struct-info (list (symbol->string (syntax->datum #'struct-name))
+                                                (map id->string (syntax->list #'(field ...)))
+                                                (map id->string (syntax->list #'(type ...)))))
          
-         ;; Define accessors
-         #,(generate-accessors #'struct-name
-                               #'(field ...)
-                               #'(type ...))
+           ;; Define create
+           (define-syntax name-create
+             (syntax-parser
+               [(_ . args)
+                #`(begin
+                    (let [(arg-vals (list . args))]
+                      ;; Check input types
+                      (#,#,struct-arg-checker arg-vals "create")
+                  
+                      ;; Insert into database
+                      (query-exec sourcery-connection
+                                  (format "INSERT INTO ~a (~a) VALUES (~a)"
+                                          #,(quote-field (id->string #'struct-name))
+                                          #,(comma-separate (map (λ (f) (quote-field (id->string f)))
+                                                                 (syntax->list #'(field ...))))
+                                          (comma-separate (map format-sql-type arg-vals)))))
+                  
+                    ;; Return a sourcery reference for access to structure
+                    (sourcery-ref #,(id->string #'struct-name)
+                                  (get-created-id #,(id->string #'struct-name))))]))
 
-         ;; Define updator
-         (define-syntax name-update
-           (syntax-parser
-             [(_ ref . args)
-              #`(begin
-                  ;; Check input types
-                  (#,(create-arg-type-checker #'struct-name #'(field ...) #'(type ...)) #'args)
+           ;; Define predicate
+           (define-syntax name-pred
+             (syntax-parser
+               [(_ x)
+                #`(and (sourcery-ref? x)
+                       (string=? (sourcery-ref-table x) #,(id->string #'struct-name))
+                       (list? (get-row (sourcery-ref-table x) (sourcery-ref-id x))))]))
+         
+           ;; Define accessors
+           #,(generate-accessors #'struct-name
+                                 #'(field ...)
+                                 #'(type ...))
 
-                  ;; Insert into database
-                  (query-exec sourcery-connection
-                              (format
-                               #,(format "UPDATE ~a SET ~~a WHERE sourcery_id = ~~a"
-                                         (quote-field (id->string #'struct-name)))
-                               (comma-separate (create-set-values-list #'(field ...) #'args))
-                               (sourcery-ref-id ref)))
+           ;; Define updator
+           (define-syntax name-update
+             (syntax-parser
+               [(_ ref . args)
+                #`(let [(ref-res ref)
+                        (arg-vals (list . args))]
+                    (begin
+                      ;; Check input types
+                      (#,#,struct-arg-checker arg-vals "update")
 
-                  ;; Return the same reference
-                  ref)])))]))
+                      ;; Insert into database
+                      (query-exec sourcery-connection
+                                  (format
+                                   #,(format "UPDATE ~a SET ~~a WHERE sourcery_id = ~~a"
+                                             (quote-field (id->string #'struct-name)))
+                                   (comma-separate (create-set-values-list #'(field ...) arg-vals))
+                                   (sourcery-ref-id ref-res)))
+
+                      ;; Return the same reference
+                      ref-res))]))))]))
 
 ;; -----------------------------------------------------------------------
 ;; Utilities for sourcery-struct
@@ -245,7 +249,9 @@
     #`(define-syntax #,accessor-id
         (syntax-parser
           [(_ ref)
-           #`(if (#,#'#,(format-id struct-name "~a?" struct-name) ref)
+           #`
+           (let [(ref-res ref)]
+             (if (#,#'#,(format-id struct-name "~a?" struct-name) ref-res)
                  
                  (let [(query-result
                         (query-rows sourcery-connection
@@ -254,7 +260,7 @@
                                                 (symbol->string (syntax->datum #'#,field)))
                                                (quote-field
                                                 (symbol->string (syntax->datum #'#,struct-name))))
-                                            (sourcery-ref-id ref))))]
+                                            (sourcery-ref-id ref-res))))]
                    (if (= (length query-result) 1)
                        (let [(type-translator
                               (fourth (get-type-info #,#,(symbol->string (syntax->datum type)))))]
@@ -264,7 +270,7 @@
                  (error #,#,(string-append (id->string accessor-id) ":")
                         (format "expected ~a, given: ~a"
                                 #,#,(id->string struct-name)
-                                ref)))]))))
+                                ref-res))))]))))
 
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
