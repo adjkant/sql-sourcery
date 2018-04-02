@@ -13,7 +13,6 @@ The basic language will aim to properly import a basic functionality similar to 
 - [x] add basic language constructs
 - [X] translate mapped structures to sourcery-ref
 - [X] check existing table declarations match current declarations
-- [X] check field name validity and translate valid struct names (no sourcery-id, no underscore, no question mark, etc)
 - [X] structure create
 - [X] proper structure printing
 - [X] structure accessors
@@ -22,6 +21,7 @@ The basic language will aim to properly import a basic functionality similar to 
 - [X] structure delete
 - [X] sourcery-load
 - [X] sourcery-filter
+- [ ] check field name validity and translate valid struct names (no sourcery-id, no underscore, no question mark, etc)
 
 #### 2. Semantic Extension
 Once successful, we aim to extend the language with helpful constructs to allow programmers to write semantic programs with syntax and paradigms matching classic lisp conventions while maintaining the mapping and mutability of the database structures. Possible extensions include:
