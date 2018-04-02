@@ -12,3 +12,7 @@ compiled
 
 # Test Output Files
 test/outputs/
+
+# Test Debug File
+test/debug-testing.rkt
+
