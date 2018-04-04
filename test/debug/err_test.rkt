@@ -1,7 +1,7 @@
-#lang s-exp "../lib/sql-sourcery.rkt"
-(sourcery-db "test-1.db")
+#lang racket
 
-(require racket)
+(require "../../lib/sql-sourcery.rkt")
+(sourcery-db "test-1.db")
 
 ;; sourcery-struct
 (sourcery-struct frog [(color STRING)])
