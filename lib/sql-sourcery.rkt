@@ -24,6 +24,7 @@
  begin
  void
  quote
+ error
 
  ;; Logical
  or and not
@@ -39,12 +40,19 @@
  cons first rest empty list length append
  second third fourth fifth sixth seventh eighth
  filter foldr andmap ormap map
- 
+
+ ;; User Testing
+ (all-from-out "user-testing.rkt")
+
+ ;; Display
+ display
+ displayln
  )
 
 ;; Language Requirements
 (require racket/struct
          db
+         "user-testing.rkt"
          "sourcery-refs.rkt"
          "sourcery-connection.rkt"
          "sql.rkt"

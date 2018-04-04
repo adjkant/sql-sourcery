@@ -17,61 +17,52 @@
 ;; Results, Setup, and Teardown Library
 
 ;; Results
-(define bob #f)
-(define ben #f)
-(define steve #f)
-(define bobby #f)
-(define sourcery-load-results #f)
+(declare-test-vars bob ben steve bobby sourcery-load-results)
 
 ;; Setup Functions
-(define-thunk-beginify su-create-bob
-  (set! bob (student-create "Bob Smith" (* 45 2) #false)))
+(define-action su-create-bob
+  (set-test-var! bob (student-create "Bob Smith" (* 45 2) #false)))
 
-(define-thunk-beginify su-create-ben
-  (set! ben (prof-create "Ben")))
+(define-action su-create-ben
+  (set-test-var! ben (prof-create "Ben")))
 
-(define-thunk-beginify su-create-steve
-  (set! steve (student-create "Steve Steve" 20 #true)))
+(define-action su-create-steve
+  (set-test-var! steve (student-create "Steve Steve" 20 #true)))
 
-(define-thunk-beginify su-update-bob-create-bobby
-  (set! bobby (student-update bob "Bobby Smith" (+ (student-grade bob) 1) #true)))
+(define-action su-update-bob-create-bobby
+  (set-test-var! bobby (student-update bob "Bobby Smith" (+ (student-grade bob) 1) #true)))
 
-(define-thunk-beginify su-update-while-create-joe-john
+(define-action su-update-while-create-joe-john
   (student-update (student-create "Temp Student" -1 #false)
                   "Joe"
                   (student-grade (student-create "John" 100 #f))
                   #t))
 
-(define-thunk-beginify su-create-joe-delete
+(define-action su-create-joe-delete
   (sourcery-delete (student-create "No Name" (student-grade (student-create "Joe" 1 #true)) #false)))
 
-(define-thunk-beginify printer-bob-display
+(define-action printer-bob-display
   (displayln bob display-file))
 
-(define-thunk-beginify printer-bob-dead-ref
+(define-action printer-bob-dead-ref
   (displayln bob dead-ref-display-file))
 
-(define-thunk-beginify su-delete-bob
+(define-action su-delete-bob
   (sourcery-delete bob))
 
 (define su-create-all (action-compose su-create-bob su-create-ben su-create-steve))
 
-(define-thunk-beginify su-load-students
-  (set! sourcery-load-results (sourcery-load student)))
+(define-action su-load-students
+  (set-test-var! sourcery-load-results (sourcery-load student)))
 
-(define su-none (λ () (void)))
+(define-action su-none)
 
 ;; Teardown Functions
-(define-thunk-beginify td-clear-all-tables
-  (stest-clear-table "student")
-  (stest-clear-table "prof"))
+(define-action td-clear-all-tables
+  (clear-sourcery-structs student prof))
 
-(define-thunk-beginify td-unset-vars
-  (set! bob #f)
-  (set! ben #f)
-  (set! steve #f)
-  (set! bobby #f)
-  (set! sourcery-load-results #f))
+(define-action td-unset-vars
+  (clear-test-vars bob ben steve bobby sourcery-load-results))
 
 (define td-complete (action-compose td-clear-all-tables td-unset-vars))
 
@@ -80,7 +71,7 @@
 ;; -----------------------------------------------------------------------
 ;; Language Tests
 
-(test-suite
+(sourcery-test-suite
  "Table Vailidity"
  #:before su-none
  #:after  td-none
@@ -93,14 +84,14 @@
  (check-equal? (stest-field "student" "eh") void))
 
 
-(test-suite
+(sourcery-test-suite
  "Structure Definition Errors"
  #:before su-none
  #:after  td-none
  (check-exn exn:fail? (λ () (begin (sourcery-struct blank []) 1))
             "sourcery-struct must have at least one field"))
 
-(test-suite
+(sourcery-test-suite
  "Structure Definition Compile Time Errors"
  #:before su-none
  #:after  td-none
@@ -109,7 +100,7 @@
                                (sourcery-struct student [(name STRING)])
                                (sourcery-struct student [(name STRING)]))))))
 
-(test-suite
+(sourcery-test-suite
  "Structure Creation"
  #:before su-create-all
  #:after  td-complete
@@ -118,7 +109,7 @@
  (check-exn exn:fail? (λ () (student-create 90 90 #false))
             "expected type STRING for name: got 90"))
 
-(test-suite
+(sourcery-test-suite
  "Structure Predicates"
  #:before su-create-all
  #:after  td-complete
@@ -128,7 +119,7 @@
  (check-false (student? ben))
  (check-false (prof? 1)))
 
-(test-suite
+(sourcery-test-suite
  "Structure Access"
  #:before su-create-all
  #:after  td-complete
@@ -137,7 +128,7 @@
  (check-equal? (student-failing bob) #f)
  (check-exn exn:fail? (λ () (student-name ben)) "expected student, given:"))
 
-(test-suite
+(sourcery-test-suite
  "Structure Update"
  #:before (action-compose su-create-all su-update-bob-create-bobby)
  #:after  td-complete
@@ -146,7 +137,7 @@
  (check-equal? (student-grade bob) 91)
  (check-equal? (student-failing bob) #true))
 
-(test-suite
+(sourcery-test-suite
  "Structure Creation Within Update"
  #:before su-update-while-create-joe-john
  #:after  td-complete
@@ -154,13 +145,13 @@
  (check-equal? (first (stest-rows "student" "sourcery_id" "1")) (list 1 "Joe" 100 "TRUE"))
  (check-equal? (first (stest-rows "student" "sourcery_id" "2")) (list 2 "John" 100 "FALSE")))
 
-(test-suite
+(sourcery-test-suite
  "Structure Printer"
  #:before (action-compose su-create-all printer-bob-display)
  #:after  td-complete
  (check-equal? (read-from-file 50 "outputs/display.txt") "#<student: Bob Smith 90 #f>"))
 
-(test-suite
+(sourcery-test-suite
  "Structure Deletion"
  #:before (action-compose su-create-all su-update-bob-create-bobby su-delete-bob printer-bob-dead-ref)
  #:after  td-complete
@@ -172,14 +163,14 @@
  (check-true (sourcery-delete bob))
  (check-equal? (length (stest-rows "student" "sourcery_id" "1")) 0))
 
-(test-suite
+(sourcery-test-suite
  "Creation Within Deletion"
  #:before su-create-joe-delete
  #:after  td-complete
  (check-equal? (length (stest-rows "student" "sourcery_id" "1")) 1)
  (check-equal? (first (stest-rows "student" "sourcery_id" "1")) (list 1 "Joe" 1 "TRUE")))
 
-(test-suite
+(sourcery-test-suite
  "sourcery-load"
  #:before (action-compose su-create-all su-load-students)
  #:after  td-complete
@@ -187,7 +178,7 @@
  (check-equal? (student-name (first sourcery-load-results)) "Bob Smith")
  (check-equal? (student-name (second sourcery-load-results)) "Steve Steve"))
 
-(test-suite
+(sourcery-test-suite
  "sourcery-filter-delete None"
  #:before su-create-all
  #:after  td-complete
@@ -195,13 +186,13 @@
  (check-equal? (student-name (first (sourcery-load student))) "Bob Smith")
  (check-equal? (student-name (second (sourcery-load student))) "Steve Steve"))
 
-(test-suite
+(sourcery-test-suite
  "sourcery-filter-delete All"
  #:before su-create-all
  #:after  td-complete
  (check-equal? (length (sourcery-filter-delete (λ (s) #f) (sourcery-load student))) 0))
 
-(test-suite
+(sourcery-test-suite
  "sourcery-filter-delete Some"
  #:before su-create-all
  #:after  td-complete
@@ -210,15 +201,15 @@
                1)
  (check-equal? (student-name (first (sourcery-load student))) "Steve Steve"))
 
-(test-suite
+(sourcery-test-suite
  ""
  #:before su-create-all
  #:after  td-complete
  )
 
 ;; Run all tests
-(sql-sourcery-tests)
+(run-sourcery-tests)
 
-;; Clear tables and delete testing database
+;; Delete testing database
 (stest-teardown "test.db")
 
