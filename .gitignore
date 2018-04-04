@@ -15,6 +15,7 @@ test/outputs/
 
 # Test Debug File
 test/debug-testing.rkt
+test/debug/debug-testing.rkt
 
 # Docs Output
 doc/*
