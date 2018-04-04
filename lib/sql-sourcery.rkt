@@ -8,7 +8,6 @@
  #%datum
  #%top
  #%top-interaction
- require
 
  ;; Sourcery Constructs
  sourcery-db
@@ -92,7 +91,7 @@
 (define-syntax sourcery-db
   (syntax-parser
     [(_ path:string)
-     #'(set-conn!
+     #'(set-sourcery-connection!
         (sqlite3-connect
          #:database path
          #:mode 'create))]
@@ -145,7 +144,7 @@
            (let [(table-count (first
                                (first
                                 (rows->lists
-                                 (query-rows sourcery-connection
+                                 (query-rows (get-sourcery-connection)
                                              (format (string-append "SELECT count(*) "
                                                                     "FROM sqlite_master WHERE "
                                                                     "type='table' AND name='~a'")
@@ -153,7 +152,7 @@
              (if (= table-count 1)
                  (let [(table-info (map (λ (r) (list (second r) (third r)))
                                         (rows->lists
-                                         (query-rows sourcery-connection
+                                         (query-rows (get-sourcery-connection)
                                                      (format "pragma table_info(~a)"
                                                              #,(quote-field
                                                                 (id->string #'struct-name)))))))
@@ -176,7 +175,7 @@
                          [(creation-string (table-creation-string #'struct-name
                                                                   #'(field ...)
                                                                   #'(type ...)))]
-                       #`(query-exec sourcery-connection #,creation-string))
+                       #`(query-exec (get-sourcery-connection) #,creation-string))
                    (void))))
 
            ;; update sourcery-struct-info at phase 0
@@ -200,7 +199,7 @@
                       (#,#,struct-arg-checker arg-vals "create")
                   
                       ;; Insert into database
-                      (query-exec sourcery-connection
+                      (query-exec (get-sourcery-connection)
                                   (format "INSERT INTO ~a (~a) VALUES (~a)"
                                           #,(quote-field (id->string #'struct-name))
                                           #,(comma-separate (map (λ (f) (quote-field (id->string f)))
@@ -237,7 +236,7 @@
                       (#,#,struct-arg-checker arg-vals "update")
 
                       ;; Insert into database
-                      (query-exec sourcery-connection
+                      (query-exec (get-sourcery-connection)
                                   (format
                                    #,(format "UPDATE ~a SET ~~a WHERE sourcery_id = ~~a"
                                              (quote-field (id->string #'struct-name)))
@@ -273,7 +272,7 @@
              (if (#,#'#,(format-id struct-name "~a?" struct-name) ref-res)
                  
                  (let [(query-result
-                        (query-rows sourcery-connection
+                        (query-rows (get-sourcery-connection)
                                     (format #,(gen-accessor-query-format
                                                (quote-field
                                                 (symbol->string (syntax->datum #'#,field)))
@@ -309,7 +308,7 @@
                                       (syntax->datum #'tbl)))))
               (s-s-i (get-sourcery-struct-info tbl-string))]
          (map (λ (r) (sourcery-ref tbl-string (first r)))
-              (rows->lists (query-rows sourcery-connection
+              (rows->lists (query-rows (get-sourcery-connection)
                                        (format "SELECT * FROM ~a"
                                                (quote-field tbl-string))))))]
     [else (error 'sourcery-load "expects single structure name")]))
@@ -322,7 +321,7 @@
 
 (define (sourcery-delete ref)
   (if (sourcery-ref? ref)
-      (begin (query-exec sourcery-connection
+      (begin (query-exec (get-sourcery-connection)
                          (format "DELETE FROM ~a WHERE sourcery_id = ~a"
                                  (quote-field (sourcery-ref-table ref))
                                  (sourcery-ref-id ref)))

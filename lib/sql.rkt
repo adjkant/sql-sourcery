@@ -50,7 +50,7 @@
 ;; String -> Integer
 ;; Get ID of last created row in given table
 (define (get-created-id table-name)
-  (get-val-from-row (query-rows sourcery-connection
+  (get-val-from-row (query-rows (get-sourcery-connection)
                                 (string-append
                                  "SELECT MAX(sourcery_id) FROM "
                                  (quote-field table-name)))
@@ -70,7 +70,7 @@
 
 ;; String Number -> [Maybe [List-of SupportedStructType]]
 (define (get-row table id)
-  (let [(rows (query-rows sourcery-connection
+  (let [(rows (query-rows (get-sourcery-connection)
                           (format "SELECT * FROM ~a WHERE sourcery_id = ~a"
                                   (quote-field table) id)))]
     (if (= 1 (length rows))

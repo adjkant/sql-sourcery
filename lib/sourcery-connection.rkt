@@ -3,7 +3,8 @@
 (provide
 
  sourcery-connection
- set-conn!)
+ get-sourcery-connection
+ set-sourcery-connection!)
 
 ;; -----------------------------------------------------------------------
 ;; Database Connection
@@ -13,7 +14,12 @@
 
 ;; DBConnection -> Void
 ;; Set the connection
-(define (set-conn! conn)
+(define (set-sourcery-connection! conn)
   (begin
     (set! sourcery-connection conn)
     (void)))
+
+(define (get-sourcery-connection)
+  (if (equal? #false sourcery-connection)
+      (error 'sourcery-connection "No sourcery connection set - must use sourcery-db before call")
+      sourcery-connection))

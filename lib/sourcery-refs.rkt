@@ -8,11 +8,8 @@
          (struct-out sourcery-ref)
          valid-sourcery-ref?)
 
-(require "sourcery-connection.rkt"
-         "type-support.rkt"
-         "utils.rkt"
+(require "type-support.rkt"
          "sql.rkt"
-         db
          racket/struct
          (for-syntax syntax/parse))
 

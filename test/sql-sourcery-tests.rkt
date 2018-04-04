@@ -1,4 +1,6 @@
-#lang s-exp "../lib/sql-sourcery.rkt"
+#lang racket
+
+(require "../lib/sql-sourcery.rkt")
 
 ;; Database connection and structure definition
 (sourcery-db "test.db")

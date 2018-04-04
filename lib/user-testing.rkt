@@ -120,10 +120,10 @@
      (let [(struct-string (id->string #'struct-name))]
        #`(if (stest-table? #,struct-string)
              (begin
-               (query-exec sourcery-connection
+               (query-exec (get-sourcery-connection)
                            (format "DELETE FROM ~a"
                                    #,struct-string))
-               (query-exec sourcery-connection
+               (query-exec (get-sourcery-connection)
                            (format "UPDATE SQLITE_SEQUENCE SET SEQ=0 WHERE NAME='~a'"
                                    #,struct-string)))
              (error 'clear-sourcery-struct
@@ -134,7 +134,7 @@
 ;; verify a table exists in the database
 (define (stest-table? table-name)
   (= 1
-     (length (query-rows sourcery-connection
+     (length (query-rows (get-sourcery-connection)
                          (format "SELECT name FROM sqlite_master WHERE type='table' AND name='~a'"
                                  table-name)))))
 
