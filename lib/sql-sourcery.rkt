@@ -300,16 +300,19 @@
 
 (define-syntax sourcery-load
   (syntax-parser
+    [(_ ) (error 'sourcery-load "expected structure name")]
     [(_ tbl)
      #`(let* [(tbl-string #,(syntax-local-value
                              #'tbl
                              (λ ()
-                               (error 'sourcery-load "expected existing struct name"))))
+                               (error 'sourcery-load "expected existing structure name got: ~a"
+                                      (syntax->datum #'tbl)))))
               (s-s-i (get-sourcery-struct-info tbl-string))]
          (map (λ (r) (sourcery-ref tbl-string (first r)))
               (rows->lists (query-rows sourcery-connection
                                        (format "SELECT * FROM ~a"
-                                               (quote-field tbl-string))))))]))
+                                               (quote-field tbl-string))))))]
+    [else (error 'sourcery-load "expects single structure name")]))
 
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
