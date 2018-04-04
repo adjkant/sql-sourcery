@@ -85,8 +85,8 @@
             prog ...)
          #`(#%module-begin
             (error 'sqllite3 (string-append "SQLite 3 is required to run SQLSourcery and is " 
-                                            "not available on this system"))))]))
-
+                                            "not available on this system"))))]
+    [else (error 'sql-sourcery "File must start with a sourcery-db statement")]))
 ;; sourcery-db
 ;; create a database connection
 (define-syntax sourcery-db
