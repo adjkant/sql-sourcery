@@ -86,7 +86,7 @@
          #`(#%module-begin
             (error 'sqllite3 (string-append "SQLite 3 is required to run SQLSourcery and is " 
                                             "not available on this system"))))]
-    [else (error 'sql-sourcery "File must start with a sourcery-db statement")]))
+    [else (error 'sql-sourcery "File must start with a sourcery-db statement with a single string")]))
 ;; sourcery-db
 ;; create a database connection
 (define-syntax sourcery-db
@@ -95,7 +95,8 @@
      #'(set-conn!
         (sqlite3-connect
          #:database path
-         #:mode 'create))]))
+         #:mode 'create))]
+    [else (error 'sql-sourcery "sourcery-db must take in a single string")]))
 
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
@@ -111,9 +112,13 @@
      #:with name-create (format-id #'struct-name "~a-create" #'struct-name)
      #:with name-pred   (format-id #'struct-name "~a?" #'struct-name)
      #:with name-update (format-id #'struct-name "~a-update" #'struct-name)
+     #:with num-fields  (length (syntax->list #`(field ...)))
      (let [(struct-arg-checker (create-arg-type-checker #'struct-name #'(field ...) #'(type ...)))]
        #`(begin
-
+           ;; Create a syntax object for the struct-name to be used for arrows
+           (define-syntax struct-name
+             #,(id->string #'struct-name))
+           
            ;; Check struct does not already exist         
            #,(if (sourcery-struct-exists? (id->string #'struct-name))
                  (error (string-append (id->string #'struct-name) ":")
@@ -121,7 +126,7 @@
                  (void))
 
            ;; Check struct has at least one field
-           (if (zero? #,(length (syntax->list #'(field ...))))
+           (if (zero? (syntax->datum #'num-fields))
                (error #,(string-append (id->string #'struct-name) ":")
                       "sourcery-struct must have at least one field")
                (void))
@@ -187,6 +192,7 @@
            ;; Define create
            (define-syntax name-create
              (syntax-parser
+               [(_ ) (error 'struct-create "Expected at least one argument for struct-create")]
                [(_ . args)
                 #`(begin
                     (let [(arg-vals (list . args))]
@@ -203,7 +209,9 @@
                   
                     ;; Return a sourcery reference for access to structure
                     (sourcery-ref #,(id->string #'struct-name)
-                                  (get-created-id #,(id->string #'struct-name))))]))
+                                  (get-created-id #,(id->string #'struct-name))))
+                #;(error 'struct-create (format "invalid number of arguments, expected ~a got: ~a"
+                                                (syntax->datum #'num-fields)(length args)))]))
 
            ;; Define predicate
            (define-syntax name-pred
@@ -237,7 +245,10 @@
                                    (sourcery-ref-id ref-res)))
 
                       ;; Return the same reference
-                      ref-res))]))))]))
+                      ref-res))]))))]
+    [else  (error 'sourcery-struct (string-append "expected expression of form (sourcery-struct id "
+                                                  "[(field type)..])"))]))
+                                                          
 
 ;; -----------------------------------------------------------------------
 ;; Utilities for sourcery-struct
@@ -278,7 +289,8 @@
                  (error #,#,(string-append (id->string accessor-id) ":")
                         (format "expected ~a, given: ~a"
                                 #,#,(id->string struct-name)
-                                ref-res))))]))))
+                                ref-res))))]
+          [else (error 'struct-accessor "Expected a single reference in struct accessor")]))))
 
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
@@ -288,8 +300,11 @@
 
 (define-syntax sourcery-load
   (syntax-parser
-    [(_ tbl:id)
-     #`(let* [(tbl-string #,(id->string #'tbl))
+    [(_ tbl)
+     #`(let* [(tbl-string #,(syntax-local-value
+                             #'tbl
+                             (λ ()
+                               (error 'sourcery-load "expected existing struct name"))))
               (s-s-i (get-sourcery-struct-info tbl-string))]
          (map (λ (r) (sourcery-ref tbl-string (first r)))
               (rows->lists (query-rows sourcery-connection
