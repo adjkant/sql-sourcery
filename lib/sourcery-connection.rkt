@@ -1,10 +1,11 @@
 #lang racket
 
 (provide
-
  sourcery-connection
  get-sourcery-connection
  set-sourcery-connection!)
+
+(require db)
 
 ;; -----------------------------------------------------------------------
 ;; Database Connection
@@ -12,13 +13,18 @@
 ;; The single database connection for a SQLSourcery program
 (define sourcery-connection #f)
 
-;; DBConnection -> Void
+;; String -> Void
 ;; Set the connection
-(define (set-sourcery-connection! conn)
+(define (set-sourcery-connection! path)
   (begin
-    (set! sourcery-connection conn)
+    (if (sqlite3-available?)
+        (set! sourcery-connection (sqlite3-connect #:database path #:mode 'create))
+        (error 'sqllite3 (string-append "SQLite 3 is required to run SQLSourcery and is " 
+                                        "not available on this system")))
     (void)))
 
+;; Void -> DBConnection
+;; get the current sourcery connection or error if none is set
 (define (get-sourcery-connection)
   (if (equal? #false sourcery-connection)
       (error 'sourcery-connection "No sourcery connection set - must use sourcery-db before call")

@@ -1,13 +1,7 @@
 #lang racket
 
-(provide check-equal?
-         check-eq?
-         check-not-equal?
-         check-exn
-         exn:fail?
-         check-true
-         check-false
-
+(provide (all-from-out rackunit)
+         
          ;; Test Suite Generation and Execution
          sourcery-test-suite
          run-sourcery-tests
@@ -35,34 +29,47 @@
 
 
 ;; -----------------------------------------------------------------------
-;; Automatically Run Test Suite
+;; Sourcery Test Suite and Running
 
+;; All tests to run
+(define sourcery-tests '())
+
+;; Any -> Void
+;; Add the given test suite to sourcery-tests
+(define (add-to-tests t)
+  (begin
+    (set! sourcery-tests (cons t sourcery-tests))
+    (void)))
+
+;; Syntax -> Void
+;; Add a test suite to the sourcery-tests
 (define-syntax sourcery-test-suite
   (syntax-parser
     [(_ pieces ...)
      #'(add-to-tests (test-suite pieces ...))]))
 
-(define-syntax run-sourcery-tests
-  (syntax-parser
-    [(_)
-     #'(begin
-         (define unsuccessful-tests (run-tests (make-test-suite "SQLSourcery Tests" all-tests)))
-         (void))]))
+;; -> Void
+;; Run all sourcery-tests
+(define (run-sourcery-tests)
+  (begin
+    (define unsuccessful-tests (run-tests (make-test-suite "SQLSourcery Tests" sourcery-tests)))
+    (void)))
 
-;; Runtime Test Suite Library
-(define all-tests '())
-
-(define (add-to-tests t)
-  (set! all-tests (cons t all-tests)))
 
 ;; -----------------------------------------------------------------------
 ;; Action Creation and Composition
 
+;; An Action is a thunk lambda that returns void
+
+;; [List-of Action] ->
+;; Compose a list of actions together into a single action with each given action executing in order
 (define (action-compose . actions)
   (λ () (begin
           (map (λ (a) (a)) actions)
           (void))))
 
+;; Any ... -> Action
+;; create an action
 (define-syntax action
   (syntax-parser
     [(_ actions ...)
@@ -70,6 +77,8 @@
                actions ...
                (void)))]))
 
+;; Any ... -> Action
+;; define an action with the given name
 (define-syntax define-action
   (syntax-parser
     [(_ name:id actions ...)
@@ -81,11 +90,19 @@
 
 ;; -----------------------------------------------------------------------
 ;; Side Effect Testing
-(define test-vars '())
 
+;; All sourcery testing variables
+(define sourcery-test-vars '())
+
+;; Add to sourcery-test-vars
+;; String -> Void
 (define (add-test-vars name)
-  (set! test-vars (append name test-vars)))
+  (begin
+    (set! sourcery-test-vars (append name sourcery-test-vars))
+    (void)))
 
+;; Delcare the given names as test variables
+;; Id ... -> Void
 (define-syntax declare-test-vars
   (syntax-parser
     [(_ name:id ...)
@@ -93,27 +110,33 @@
               (add-test-vars (map symbol->string '(name ...))))]
     [else #`(error 'define-test-var "Invalid test variable declaration")]))
 
+;; Set a given test variable Id to the given value
+;; Id Any -> Void
 (define-syntax set-test-var!
   (syntax-parser
     [(_ var:id value)
-     #`(if (member #,(id->string #' var) test-vars)
+     #`(if (member #,(id->string #' var) sourcery-test-vars)
            (set! var value)
            (error 'modify-test-var! (format "Invalid test variable: ~a" #,(id->string #' var))))]
     [else #`(error 'define-test-var "Invalid test variable modification")]))
 
+;; Clear the values of the given test var Id's
+;; Id ... -> Void
 (define-syntax clear-test-vars
   (syntax-parser
     [(_ var:id ...)
      #`(begin (set-test-var! var #f) ...)]))
 
-;; String -> Boolean
-;; delete all records from a given table and reset the autoincrement
+;; Id -> Void
+;; clear all given sourcery-struct's
 (define-syntax clear-sourcery-structs
   (syntax-parser
     [(_ struct-name:id ...)
      #`(begin (clear-sourcery-struct struct-name) ...)]
     [else #`(error 'clear-sourcery-structs "Invalid clearing of sourcery structures")]))
 
+;; Id -> Void
+;; delete all records from a given table and reset the autoincrement
 (define-syntax clear-sourcery-struct
   (syntax-parser
     [(_ struct-name:id)

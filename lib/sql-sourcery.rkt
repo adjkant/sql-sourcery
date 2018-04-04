@@ -2,55 +2,19 @@
 
 (provide
 
- ;; Language Basics
- (rename-out (sourcery-begin #%module-begin))
- #%app
- #%datum
- #%top
- #%top-interaction
-
  ;; Sourcery Constructs
  sourcery-db
  sourcery-struct
  sourcery-delete
  sourcery-load
  sourcery-filter-delete
- 
- ;; Basic Language Constructs
- define
- let
- lambda λ
- begin
- void
- quote
- error
-
- ;; Logical
- or and not
-
- ;; Numerical
- + - * / modulo
- number? integer? real?
- > < = >= <=
- ;; Strings
- string? string=? string-length substring string-append
-
- ;; Lists
- cons first rest empty list length append
- second third fourth fifth sixth seventh eighth
- filter foldr andmap ormap map
 
  ;; User Testing
  (all-from-out "user-testing.rkt")
-
- ;; Display
- display
- displayln
  )
 
 ;; Language Requirements
-(require racket/struct
-         db
+(require db
          "user-testing.rkt"
          "sourcery-refs.rkt"
          "sourcery-connection.rkt"
@@ -72,29 +36,12 @@
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
 
-;; #%module-begin
-;; verify the shape of the program is valid
-(define-syntax sourcery-begin
-  (syntax-parser
-    [(_ ((~literal sourcery-db) path:string)
-        prog ...)
-     (if (sqlite3-available?)
-         #`(#%module-begin
-            (sourcery-db path)
-            prog ...)
-         #`(#%module-begin
-            (error 'sqllite3 (string-append "SQLite 3 is required to run SQLSourcery and is " 
-                                            "not available on this system"))))]
-    [else (error 'sql-sourcery "File must start with a sourcery-db statement with a single string")]))
 ;; sourcery-db
-;; create a database connection
+;; create a database connection to the given path and set as current connection
 (define-syntax sourcery-db
   (syntax-parser
     [(_ path:string)
-     #'(set-sourcery-connection!
-        (sqlite3-connect
-         #:database path
-         #:mode 'create))]
+     #'(set-sourcery-connection! path)]
     [else (error 'sql-sourcery "sourcery-db must take in a single string")]))
 
 ;; -----------------------------------------------------------------------
@@ -104,7 +51,7 @@
 ;; -----------------------------------------------------------------------
 
 ;; sourcery-struct
-;; Create sourcery-struct database table, loader, constructors, updator, and accessors
+;; Create sourcery-struct database table create, constructors, updator, and accessors
 (define-syntax sourcery-struct
   (syntax-parser
     [(_ struct-name:id [(field:id type:id) ...])
@@ -297,9 +244,11 @@
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
 
+;; sourcery-load
+;; load all structures from the given id referencing a defineed sourcery-struct
 (define-syntax sourcery-load
   (syntax-parser
-    [(_ ) (error 'sourcery-load "expected structure name")]
+    [(_) (error 'sourcery-load "expected structure name")]
     [(_ tbl)
      #`(let* [(tbl-string #,(syntax-local-value
                              #'tbl
@@ -319,6 +268,8 @@
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
 
+;; sourcery-delete
+;; delete the given sourcery-struct reference
 (define (sourcery-delete ref)
   (if (sourcery-ref? ref)
       (begin (query-exec (get-sourcery-connection)
@@ -335,6 +286,8 @@
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
 
+;; sourcery-filter-delete
+;; delete all sourcery references that don't pass the given predicate
 (define (sourcery-filter-delete pred refs)
   (if (and (list? refs) (andmap valid-sourcery-ref? refs))
       (let [(return-list (filter pred refs))
