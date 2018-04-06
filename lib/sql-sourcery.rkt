@@ -5,8 +5,8 @@
  ;; Sourcery Constructs
  sourcery-db
  sourcery-struct
- sourcery-delete
  sourcery-load
+ sourcery-delete
  sourcery-filter-delete
 
  ;; User Testing
