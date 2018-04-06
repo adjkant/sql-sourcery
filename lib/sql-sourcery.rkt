@@ -138,26 +138,30 @@
            ;; Define create
            (define-syntax name-create
              (syntax-parser
-               [(_ ) (error 'struct-create "Expected at least one argument for struct-create")]
+               [(_ ) (error 'struct-create (format "Expected ~a arguments for struct-create"
+                                                   (syntax->datum #'num-fields)))]
                [(_ . args)
-                #`(begin
-                    (let [(arg-vals (list . args))]
-                      ;; Check input types
-                      (#,#,struct-arg-checker arg-vals "create")
+                (if (= (syntax->datum #'num-fields) (length (syntax->list #'args)))
+                    #`(begin
+                        (let [(arg-vals (list . args))]
+                          ;; Check input types
+                          (#,#,struct-arg-checker arg-vals "create")
                   
-                      ;; Insert into database
-                      (query-exec (get-sourcery-connection)
-                                  (format "INSERT INTO ~a (~a) VALUES (~a)"
-                                          #,(quote-field (id->string #'struct-name))
-                                          #,(comma-separate (map (λ (f) (quote-field (id->string f)))
-                                                                 (syntax->list #'(field ...))))
-                                          (comma-separate (map format-sql-type arg-vals)))))
+                          ;; Insert into database
+                          (query-exec (get-sourcery-connection)
+                                      (format "INSERT INTO ~a (~a) VALUES (~a)"
+                                              #,(quote-field (id->string #'struct-name))
+                                              #,(comma-separate (map (λ (f)
+                                                                       (quote-field (id->string f)))
+                                                                     (syntax->list #'(field ...))))
+                                              (comma-separate (map format-sql-type arg-vals)))))
                   
-                    ;; Return a sourcery reference for access to structure
-                    (sourcery-ref #,(id->string #'struct-name)
-                                  (get-created-id #,(id->string #'struct-name))))
-                #;(error 'struct-create (format "invalid number of arguments, expected ~a got: ~a"
-                                                (syntax->datum #'num-fields)(length args)))]))
+                        ;; Return a sourcery reference for access to structure
+                        (sourcery-ref #,(id->string #'struct-name)
+                                      (get-created-id #,(id->string #'struct-name))))
+                    (error 'struct-create (format "invalid number of arguments, expected ~a got: ~a"
+                                                  (syntax->datum #'num-fields)
+                                                  (length (syntax->list #'args)))))]))
 
            ;; Define predicate
            (define-syntax name-pred
@@ -175,23 +179,30 @@
            ;; Define updator
            (define-syntax name-update
              (syntax-parser
+               [(_ ) (error 'struct-update (format "Expected ~a arguments for struct-update"
+                                                   (+ 1 (syntax->datum #'num-fields))))]
                [(_ ref . args)
-                #`(let [(ref-res ref)
-                        (arg-vals (list . args))]
-                    (begin
-                      ;; Check input types
-                      (#,#,struct-arg-checker arg-vals "update")
+                (if (= (syntax->datum #'num-fields) (length (syntax->list #'args)))
+                    #`(let [(ref-res ref)
+                            (arg-vals (list . args))]
+                        (begin
+                          ;; Check input types
+                          (#,#,struct-arg-checker arg-vals "update")
 
-                      ;; Insert into database
-                      (query-exec (get-sourcery-connection)
-                                  (format
-                                   #,(format "UPDATE ~a SET ~~a WHERE sourcery_id = ~~a"
-                                             (quote-field (id->string #'struct-name)))
-                                   (comma-separate (create-set-values-list #'(field ...) arg-vals))
-                                   (sourcery-ref-id ref-res)))
+                          ;; Insert into database
+                          (query-exec (get-sourcery-connection)
+                                      (format
+                                       #,(format "UPDATE ~a SET ~~a WHERE sourcery_id = ~~a"
+                                                 (quote-field (id->string #'struct-name)))
+                                       (comma-separate (create-set-values-list #'(field ...)
+                                                                               arg-vals))
+                                       (sourcery-ref-id ref-res)))
 
-                      ;; Return the same reference
-                      ref-res))]))))]
+                          ;; Return the same reference
+                          ref-res))
+                    (error 'struct-update (format "invalid number of arguments, expected ~a got: ~a"
+                                                  (+ 1 (syntax->datum #'num-fields))
+                                                  (+ 1 (length (syntax->list #'args))))))]))))]
     [else  (error 'sourcery-struct (string-append "expected expression of form (sourcery-struct id "
                                                   "[(field type)..])"))]))
                                                           
