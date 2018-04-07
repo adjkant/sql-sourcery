@@ -52,7 +52,7 @@
 (define-action su-delete-bob
   (sourcery-delete bob))
 
-(define su-create-all (action-compose su-create-bob su-create-ben su-create-steve))
+(define-composed-action su-create-all [su-create-bob su-create-ben su-create-steve])
 
 (define-action su-load-students
   (set-test-var! sourcery-load-results (sourcery-load student)))
@@ -64,9 +64,9 @@
   (clear-sourcery-structs student prof))
 
 (define-action td-unset-vars
-  (clear-test-vars bob ben steve bobby sourcery-load-results))
+  (clear-test-vars! bob ben steve bobby sourcery-load-results))
 
-(define td-complete (action-compose td-clear-all-tables td-unset-vars))
+(define-composed-action td-complete [td-clear-all-tables td-unset-vars])
 
 (define td-none su-none)
 

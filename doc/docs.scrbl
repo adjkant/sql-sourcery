@@ -238,17 +238,17 @@ with racket, the library can be combersome to use. SQLSourcery comes with a test
 @subsection{Testing Philosophy}
 
 There are a few main concepts that come with SQLSourcery's testing library:
-@itemlist[@item{Sourcery Test Suites}
-          @item{Testing Variables}
-          @item{Testing Actions}]
+@itemlist[@item{@(seclink "TESTING_VARIABLES" "Testing Variables")}
+          @item{@(seclink "TESTING_ACTIONS" "Testing Actions")}
+          @item{@(seclink "TESTING_SUITES" "Sourcery Test Suites")}]
 
 Sourcery Test Suites uses the racket
 @(hyperlink "https://docs.racket-lang.org/rackunit/api.html?q=test-suite#%28form._%28%28lib.
 _rackunit%2Fmain..rkt%29._test-suite%29%29"
-             "test-suite")
- and adds the tests to a module level global lists of tests that can be run with a single command. At
+            "test-suite")
+and adds the tests to a module level global lists of tests that can be run with a single command. At
 its core, these are most useful for their before and after clauses, which take in
-@(seclink "ACTIONS" "actions").
+@(seclink "TESTING_ACTIONS" "actions").
 
 In order to take advantage of before and after clauses in test suites, varaibles must be avaiable
 in the before, during, and after stages, as well as being able to be modified. While this can be done
@@ -259,36 +259,196 @@ mutation of variables not used in testing.
 Before and after clauses in
 @(hyperlink "https://docs.racket-lang.org/rackunit/api.html?q=test-suite#%28form._%28%28lib.
 _rackunit%2Fmain..rkt%29._test-suite%29%29"
-             "test-suite")
- are thunks that return void. To simplify writing these thunks, the testing library introduces the
+            "test-suite")
+are thunks that return void. To simplify writing these thunks, the testing library introduces the
 concept of actions that can perform multiple operations at once and can be composed together in an
 intuitive order for the context of testing.
 
+Testing will use the currently set sourcery-db. It is customary to test by using a test module and
+using a testing database via a call to sourcery-db at the start of the module
+
 
 @;{-------------------------------------------------------------}
-@subsection{Test Suite Vars}
+@(subsection #:tag "TESTING_VARIABLES" "Testing Variables")
 
-Fundamental to testing the mutation of database backed objects is the ability to create objects and
-test their properties later.
+@defform[(declare-test-vars [var-id id?])]{
+ Define the given ids to be test variables with the initial value of #f using the racket define.
 
-To begin a series of tests, a sourcerer must declare which variables they want to use.
+ @examples[#:eval sourcery-eval
+           #:label "Example:"
+           (declare-test-vars a b c)
+           a
+           b
+           c]
+}
 
-;; Test Suite Generation and Execution
-sourcery-test-suite
-run-sourcery-tests
+@defproc[(set-test-var! [var-id id?] [value any?]) void]{
+ Set the given test varaible to the given value. Will error if the given id is not a test varaible.
+ 
+ @examples[#:eval sourcery-eval
+           #:label "Example:"
+           (define d #f)
+           a
+           b
+           c
+           d
+           (set-test-var! a 1)
+           a
+           (eval:error (set-test-var! d 1))]
+}
 
-;; Action Creation and Composition
-action
-define-action
-action-compose
+@defproc[(clear-test-vars! [var-id id?] ...)
+         void]{
+ Set the given test variable ids to #false. Error if given an invalid test id. If error occurs, all
+ ids listed before the invalid id will be set.
 
-;; Side Effect Testing
-declare-test-vars
-set-test-var!
-clear-test-vars
+ @examples[#:eval sourcery-eval
+           #:label "Example:"
+           (set-test-var! a 2)
+           (set-test-var! b 3)
+           (set-test-var! c 3)
+           a
+           b
+           c
+           (clear-test-vars! a b)
+           a
+           b
+           c]
+}
 
-;; Database Teardown
-clear-sourcery-structs
+@;{-------------------------------------------------------------}
+@(subsection #:tag "TESTING_ACTIONS" "Testing Actions")
+
+@defproc[(action [expr ...])
+         thunk?]{
+ Create an action (thunk) that runs all expressions inside a begin and then returns void.
+
+ @examples[#:eval sourcery-eval
+           #:label "Example using set!:"
+           (define x 1)
+           ((action (set! x 2)))
+           x]
+
+ @examples[#:eval sourcery-eval
+           #:label "Example using test variables:"
+           a
+           ((action (set-test-var! a 3)))
+           a]
+}
+
+@defform[(define-action [name id?] [expr any?] ...)]{
+ Define an action with the given name.
+
+ Shortcut for:
+ @(racketblock (define name (action expr ...)))
+
+ @examples[#:eval sourcery-eval
+           #:label "Example using set!:"
+           (define x 1)
+           (define-action action-1 (set! x 2))
+           (action-1)
+           x]
+
+ @examples[#:eval sourcery-eval
+           #:label "Example using test variables:"
+           a
+           (define-action action-2 (set-test-var! a 4))
+           (action-2)
+           a]
+}
+
+@defproc[(action-compose [action thunk?] ...)
+         thunk?]{
+ Create a single action that executes the given actions from left to right.
+
+ @examples[#:eval sourcery-eval
+           #:label ":Example"
+           (declare-test-vars v1 v2)
+           (define-action v-action-1 (set-test-var! v1 1))
+           (define-action v-action-2 (set-test-var! v2 2))
+           (define-action v-action-3 (set-test-var! v1 3))
+           (define v-action-4 (action-compose v-action-1 v-action-2 v-action-3))
+           v1
+           v2
+           (v-action-4)
+           v1
+           v2]
+}
+
+@defform[(define-composed-action [name id?] [[action action?] ...])]{
+ Define an action with the given name by composing the given actions.
+
+  @examples[#:eval sourcery-eval
+           #:hidden
+           (set-test-var! v1 #f)
+           (set-test-var! v2 #f)] 
+
+ @examples[#:eval sourcery-eval
+           #:label ":Example"
+           (define-composed-action v-action-4-easier [v-action-1 v-action-2 v-action-3])
+           v1
+           v2
+           (v-action-4-easier)
+           v1
+           v2]
+}
+ 
+
+@;{-------------------------------------------------------------}
+@(subsection #:tag "TESTING_CLEANUP" "Testing Cleanup")
+
+@defproc[(clear-sourcery-structs [struct-name struct-name?] ...)
+         void]{
+ sourcery-delete all existing sourcery-structs of the type of the given names. Will possibly
+ create @(seclink "DEAD" "dead references").
+
+ @examples[#:eval sourcery-eval
+           #:hidden
+           (sourcery-filter-delete (λ (x) #f) (sourcery-load spell))] 
+
+ @examples[#:eval sourcery-eval
+           #:label ":Example"
+           (define alakazam (spell-create "Alakazam" 100 #false))
+           (clear-sourcery-structs spell)
+           (sourcery-load spell)]
+ 
+ Accessesing @italic{alakazam} will result in:
+ @(racketblock (spell 'dead-reference))
+}
+
+
+@;{-------------------------------------------------------------}
+@(subsection #:tag "TESTING_SUITES" "Sourcery Test Suites")
+
+@defproc[(sourcery-test-suite [name-expr string?]
+                              [maybe-before before-action]
+                              [maybe-after after-action]
+                              [test test?] ...)
+         void]{
+                                
+ Acts the same as
+ @(hyperlink "https://docs.racket-lang.org/rackunit/api.html?q=test-suite#%28form._%28%28lib.
+_rackunit%2Fmain..rkt%29._test-suite%29%29"
+             "test-suite")
+ except that it will add the suite to the global tests.
+                                
+ Example:
+ @(racketblock
+   (sourcery-test-suite
+    "A sourcery-test-suite using fictional actions"
+    #:before su-create-all ;; create students and load into sourcery-load-results
+    #:after  td-complete ;; remove students and unset all testing varaibles
+    (check-equal? (student-name (first sourcery-load-results)) "Bob Smith")
+    (check-equal? (student-name (second sourcery-load-results)) "Steve Steve")))
+
+}
+
+@defproc[(run-sourcery-tests) void]{
+ Run all of the sourcery-test-suites defined before this call using
+ @(hyperlink "https://docs.racket-lang.org/rackunit/api.html?q=test-suite#%28def._%28%28lib.
+_rackunit%2Ftext-ui..rkt%29._run-tests%29%29"
+             "run-tests")
+}
 
 
 @;{------------------------------------------------------------------------------------------------}
@@ -326,23 +486,23 @@ of the status of references.
 
 
 @;{-------------------------------------------------------------}
-@subsection{SQLSourcery Paradigms}
+@section{SQLSourcery Paradigms}
 
 There are a few main paradigms that are suggested for SQLSourcery programs:
 
-@subsubsection{Complete Integration}
+@subsection{Complete Integration}
 
 TODO
 
-@subsubsection{Loading and Saving}
+@subsection{Loading and Saving}
 
 TODO
 
-@subsubsection{Task Scripts}
+@subsection{Task Scripts}
 
 TODO
 
-@subsubsection{Relational Mapping}
+@subsection{Relational Mapping}
 
 TODO
 

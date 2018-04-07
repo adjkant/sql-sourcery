@@ -10,11 +10,12 @@
          action
          define-action
          action-compose
+         define-composed-action
 
          ;; Side Effect Testing
          declare-test-vars
          set-test-var!
-         clear-test-vars
+         clear-test-vars!
 
          ;; Database Teardown
          clear-sourcery-structs)
@@ -61,31 +62,37 @@
 
 ;; An Action is a thunk lambda that returns void
 
-;; [List-of Action] ->
+;; [List-of Action] -> Action
 ;; Compose a list of actions together into a single action with each given action executing in order
 (define (action-compose . actions)
-  (λ () (begin
-          (map (λ (a) (a)) actions)
-          (void))))
+  (λ ()
+    (begin
+      (map (λ (a) (a)) actions)
+      (void))))
 
 ;; Any ... -> Action
 ;; create an action
 (define-syntax action
   (syntax-parser
-    [(_ actions ...)
+    [(_ expr ...)
      #`(λ () (begin
-               actions ...
+               expr ...
                (void)))]))
 
-;; Any ... -> Action
+;; Any ... -> Void
 ;; define an action with the given name
 (define-syntax define-action
   (syntax-parser
-    [(_ name:id actions ...)
-     #`(define name
-         (λ () (begin
-                 actions ...
-                 (void))))]))
+    [(_ name:id exprs ...)
+     #`(define name (action exprs ...))]))
+
+;; Id Action -> Void
+;; define a composed action with the given name and comprised of the given actions
+(define-syntax define-composed-action
+  (syntax-parser
+    [(_ name:id [a ...])
+     #'(define name (action-compose a ...))]
+    [else (error 'define-composed-action "Invalid arguments to define-composed-action")]))
 
 
 ;; -----------------------------------------------------------------------
@@ -108,7 +115,7 @@
     [(_ name:id ...)
      #`(begin (define name #f) ...
               (add-test-vars (map symbol->string '(name ...))))]
-    [else #`(error 'define-test-var "Invalid test variable declaration")]))
+    [else #`(error 'declare-test-vars "Invalid test variable declaration")]))
 
 ;; Set a given test variable Id to the given value
 ;; Id Any -> Void
@@ -117,12 +124,12 @@
     [(_ var:id value)
      #`(if (member #,(id->string #' var) sourcery-test-vars)
            (set! var value)
-           (error 'modify-test-var! (format "Invalid test variable: ~a" #,(id->string #' var))))]
-    [else #`(error 'define-test-var "Invalid test variable modification")]))
+           (error 'set-test-var! (format "Invalid test variable: ~a" #,(id->string #' var))))]
+    [else #`(error 'set-test-var! "Invalid test variable modification")]))
 
 ;; Clear the values of the given test var Id's
 ;; Id ... -> Void
-(define-syntax clear-test-vars
+(define-syntax clear-test-vars!
   (syntax-parser
     [(_ var:id ...)
      #`(begin (set-test-var! var #f) ...)]))
