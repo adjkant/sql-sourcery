@@ -56,10 +56,12 @@
 (define-syntax sourcery-struct
   (syntax-parser
     [(_ struct-name:id [(field:id type:id) ...])
-     #:with name-create (format-id #'struct-name "~a-create" #'struct-name)
-     #:with name-pred   (format-id #'struct-name "~a?" #'struct-name)
-     #:with name-update (format-id #'struct-name "~a-update" #'struct-name)
-     #:with num-fields  (length (syntax->list #`(field ...)))
+     #:with name-create   (format-id #'struct-name "~a-create" #'struct-name)
+     #:with name-pred     (format-id #'struct-name "~a?" #'struct-name)
+     #:with name-update   (format-id #'struct-name "~a-update" #'struct-name)
+     #:with name-unmapped (format-id #'struct-name "~a-unmapped" #'struct-name)
+     #:with name-map      (format-id #'struct-name "~a-map" #'struct-name)
+     #:with num-fields    (length (syntax->list #`(field ...)))
      (let [(struct-arg-checker (create-arg-type-checker #'struct-name #'(field ...) #'(type ...)))]
        (begin
          
@@ -141,6 +143,14 @@
            #,(update-sourcery-struct-info (list (symbol->string (syntax->datum #'struct-name))
                                                 (map id->string (syntax->list #'(field ...)))
                                                 (map id->string (syntax->list #'(type ...)))))
+
+           ;; Define predicate
+           (define-syntax name-pred
+             (syntax-parser
+               [(_ x)
+                #`(and (sourcery-ref? x)
+                       (string=? (sourcery-ref-table x) #,(id->string #'struct-name))
+                       (list? (get-row (sourcery-ref-table x) (sourcery-ref-id x))))]))
          
            ;; Define create
            (define-syntax name-create
@@ -169,14 +179,6 @@
                     (error 'struct-create (format "invalid number of arguments, expected ~a got: ~a"
                                                   (syntax->datum #'num-fields)
                                                   (length (syntax->list #'args)))))]))
-
-           ;; Define predicate
-           (define-syntax name-pred
-             (syntax-parser
-               [(_ x)
-                #`(and (sourcery-ref? x)
-                       (string=? (sourcery-ref-table x) #,(id->string #'struct-name))
-                       (list? (get-row (sourcery-ref-table x) (sourcery-ref-id x))))]))
          
            ;; Define accessors
            #,(generate-accessors #'struct-name

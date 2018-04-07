@@ -4,14 +4,17 @@
  sourcery-connection
  get-sourcery-connection
  set-sourcery-connection!
- SOURCERY_ID_FIELD_NAME)
+ SOURCERY_ID_FIELD_NAME
+ RESERVED_FIELD_NAMES)
 
 (require db)
 
 ;; -----------------------------------------------------------------------
 ;; Database Connection
 
+;; Sourcery ID field name in sourcery databases
 (define SOURCERY_ID_FIELD_NAME "__sourcery_id")
+(define RESERVED_FIELD_NAMES (list "create" "update" "map" "unmapped"))
 
 ;; The single database connection for a SQLSourcery program
 (define sourcery-connection #f)

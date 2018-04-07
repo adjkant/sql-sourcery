@@ -7,6 +7,8 @@
          unquote-field
          field-valid?)
 
+(require "sourcery-connection.rkt")
+
 
 ;; Id -> String
 ;; Convert an identifier to a string
@@ -48,6 +50,11 @@
   (substring f 1 (- (length f) 2)))
 
 (define (field-valid? f)
-  (if (and (> (string-length f) 1) (string=? (substring f 0 2) "__"))
-      (error 'sourcery-struct (format "Invalid field name: ~a" f))
-      (void)))
+  (cond
+    [(and (> (string-length f) 1) (string=? (substring f 0 2) "__"))
+     (error 'sourcery-struct (format "Invalid field name: ~a" f))]
+    [(member f RESERVED_FIELD_NAMES)
+     (error 'sourcery-struct
+            (format "Field name ~a is reserved for sourcery-structs. Reserved field names: ~a"
+                    f RESERVED_FIELD_NAMES))]
+    [else (void)]))

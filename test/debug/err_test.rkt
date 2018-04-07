@@ -39,3 +39,6 @@
 ;;check-syntax
 ;; 9.2
 
+#;(sourcery-struct a [(__a STRING)])
+#;(sourcery-struct a [(create INTEGER) (update INTEGER) (map INTEGER) (unmapped INTEGER)])
+

@@ -21,6 +21,7 @@
 
 @examples[#:eval sourcery-eval
           #:hidden
+          (delete-file "docs.db")
           (sourcery-db "docs.db")
           (sourcery-struct spell [(name STRING) (power INTEGER) (deadly? BOOLEAN)])]
 
