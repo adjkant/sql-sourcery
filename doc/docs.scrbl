@@ -230,6 +230,68 @@ A sourcery-struct definition will create the following functions:
 }
 
 @;{------------------------------------------------------------------------------------------------}
+@section{Testing}
+
+SQLSourcery programs must test mutation and be able to easily write setup and teardown. While possible
+with racket, the library can be combersome to use. SQLSourcery comes with a testing library.
+
+@subsection{Testing Philosophy}
+
+There are a few main concepts that come with SQLSourcery's testing library:
+@itemlist[@item{Sourcery Test Suites}
+          @item{Testing Variables}
+          @item{Testing Actions}]
+
+Sourcery Test Suites uses the racket
+@(hyperlink "https://docs.racket-lang.org/rackunit/api.html?q=test-suite#%28form._%28%28lib.
+_rackunit%2Fmain..rkt%29._test-suite%29%29"
+             "test-suite")
+ and adds the tests to a module level global lists of tests that can be run with a single command. At
+its core, these are most useful for their before and after clauses, which take in
+@(seclink "ACTIONS" "actions").
+
+In order to take advantage of before and after clauses in test suites, varaibles must be avaiable
+in the before, during, and after stages, as well as being able to be modified. While this can be done
+with set!, the testing library allows easy declaration, setting, and clearing of testing varaibles
+through a simple API that clearly signifies their status for testing and will prevent accidental
+mutation of variables not used in testing.
+
+Before and after clauses in
+@(hyperlink "https://docs.racket-lang.org/rackunit/api.html?q=test-suite#%28form._%28%28lib.
+_rackunit%2Fmain..rkt%29._test-suite%29%29"
+             "test-suite")
+ are thunks that return void. To simplify writing these thunks, the testing library introduces the
+concept of actions that can perform multiple operations at once and can be composed together in an
+intuitive order for the context of testing.
+
+
+@;{-------------------------------------------------------------}
+@subsection{Test Suite Vars}
+
+Fundamental to testing the mutation of database backed objects is the ability to create objects and
+test their properties later.
+
+To begin a series of tests, a sourcerer must declare which variables they want to use.
+
+;; Test Suite Generation and Execution
+sourcery-test-suite
+run-sourcery-tests
+
+;; Action Creation and Composition
+action
+define-action
+action-compose
+
+;; Side Effect Testing
+declare-test-vars
+set-test-var!
+clear-test-vars
+
+;; Database Teardown
+clear-sourcery-structs
+
+
+@;{------------------------------------------------------------------------------------------------}
 @(section "Programming with SQLSourcery")
 
 @;{-------------------------------------------------------------}
