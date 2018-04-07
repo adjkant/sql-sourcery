@@ -4,6 +4,9 @@
 ;; Library Provide
 (provide
 
+ ;; Sourcery ID Field Name
+ SOURCERY_ID_FIELD_NAME
+
  ;; Alternate name for check-true
  check-success
  
@@ -26,7 +29,8 @@
 ;; -----------------------------------------------------------------------
 ;; Internal Requirements
 (require rackunit
-         db)
+         db
+         "../lib/sourcery-connection.rkt")
 
 
 ;; -----------------------------------------------------------------------

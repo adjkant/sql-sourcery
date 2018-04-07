@@ -26,6 +26,7 @@
                      racket
                      db
                      "sourcery-refs.rkt"
+                     "sourcery-connection.rkt"
                      "type-support.rkt"
                      "utils.rkt"
                      "utils-phase-1.rkt"))
@@ -60,6 +61,11 @@
      #:with name-update (format-id #'struct-name "~a-update" #'struct-name)
      #:with num-fields  (length (syntax->list #`(field ...)))
      (let [(struct-arg-checker (create-arg-type-checker #'struct-name #'(field ...) #'(type ...)))]
+       (begin
+         
+         ;; Check field names are valid
+         (map field-valid? (map id->string (syntax->list #'(field ...))))
+         
        #`(begin
            ;; Create a syntax object for the struct-name to be used for arrows
            (define-syntax struct-name
@@ -76,7 +82,8 @@
                (error #,(string-append (id->string #'struct-name) ":")
                       "sourcery-struct must have at least one field")
                (void))
-         
+
+          
            ;; Check types of fields in structure defition
            (let [(res #,(first-failing (compose validate-type symbol->string syntax->datum)
                                        (compose symbol->string syntax->datum)
@@ -104,7 +111,7 @@
                                                              #,(quote-field
                                                                 (id->string #'struct-name)))))))
                        (dec-info
-                        (cons (list "sourcery_id" "INTEGER")
+                        (cons (list SOURCERY_ID_FIELD_NAME "INTEGER")
                               (map list
                                    (list (symbol->string (syntax->datum #'field)) ...)
                                    (list (symbol->string (syntax->datum #'type)) ...))))]
@@ -192,8 +199,9 @@
                           ;; Insert into database
                           (query-exec (get-sourcery-connection)
                                       (format
-                                       #,(format "UPDATE ~a SET ~~a WHERE sourcery_id = ~~a"
-                                                 (quote-field (id->string #'struct-name)))
+                                       #,(format "UPDATE ~a SET ~~a WHERE ~a = ~~a"
+                                                 (quote-field (id->string #'struct-name))
+                                                 SOURCERY_ID_FIELD_NAME)
                                        (comma-separate (create-set-values-list #'(field ...)
                                                                                arg-vals))
                                        (sourcery-ref-id ref-res)))
@@ -202,7 +210,7 @@
                           ref-res))
                     (error 'struct-update (format "invalid number of arguments, expected ~a got: ~a"
                                                   (+ 1 (syntax->datum #'num-fields))
-                                                  (+ 1 (length (syntax->list #'args))))))]))))]
+                                                  (+ 1 (length (syntax->list #'args))))))])))))]
     [else  (error 'sourcery-struct (string-append "expected expression of form (sourcery-struct id "
                                                   "[(field type)..])"))]))
                                                           
@@ -284,8 +292,9 @@
 (define (sourcery-delete ref)
   (if (sourcery-ref? ref)
       (begin (query-exec (get-sourcery-connection)
-                         (format "DELETE FROM ~a WHERE sourcery_id = ~a"
+                         (format "DELETE FROM ~a WHERE ~a = ~a"
                                  (quote-field (sourcery-ref-table ref))
+                                 SOURCERY_ID_FIELD_NAME
                                  (sourcery-ref-id ref)))
              #t)
       (error 'sourcery-delete

@@ -79,7 +79,7 @@
  #:after  td-none
  (check-true (stest-table? "student"))
  (check-equal? (stest-fields "student") 4)
- (check-equal? (stest-field "student" "sourcery_id") "INTEGER")
+ (check-equal? (stest-field "student" SOURCERY_ID_FIELD_NAME) "INTEGER")
  (check-equal? (stest-field "student" "name") "STRING")
  (check-equal? (stest-field "student" "grade") "INTEGER")
  (check-equal? (stest-field "student" "failing") "BOOLEAN")
@@ -106,8 +106,9 @@
  "Structure Creation"
  #:before su-create-all
  #:after  td-complete
- (check-equal? (length (stest-rows "student" "sourcery_id" "1")) 1)
- (check-equal? (first (stest-rows "student" "sourcery_id" "1")) (list 1 "Bob Smith" 90 "FALSE"))
+ (check-equal? (length (stest-rows "student" SOURCERY_ID_FIELD_NAME "1")) 1)
+ (check-equal? (first (stest-rows "student" SOURCERY_ID_FIELD_NAME "1"))
+               (list 1 "Bob Smith" 90 "FALSE"))
  (check-exn exn:fail? (λ () (student-create 90 90 #false))
             "expected type STRING for name: got 90"))
 
@@ -143,9 +144,9 @@
  "Structure Creation Within Update"
  #:before su-update-while-create-joe-john
  #:after  td-complete
- (check-equal? (length (stest-rows "student" "sourcery_id" "1")) 1)
- (check-equal? (first (stest-rows "student" "sourcery_id" "1")) (list 1 "Joe" 100 "TRUE"))
- (check-equal? (first (stest-rows "student" "sourcery_id" "2")) (list 2 "John" 100 "FALSE")))
+ (check-equal? (length (stest-rows "student" SOURCERY_ID_FIELD_NAME "1")) 1)
+ (check-equal? (first (stest-rows "student" SOURCERY_ID_FIELD_NAME "1")) (list 1 "Joe" 100 "TRUE"))
+ (check-equal? (first (stest-rows "student" SOURCERY_ID_FIELD_NAME "2")) (list 2 "John" 100 "FALSE")))
 
 (sourcery-test-suite
  "Structure Printer"
@@ -163,14 +164,14 @@
  (check-false (student? bob))
  (check-equal? (read-from-file 50 "outputs/display-dead-ref.txt") "#<student: dead-reference>")
  (check-true (sourcery-delete bob))
- (check-equal? (length (stest-rows "student" "sourcery_id" "1")) 0))
+ (check-equal? (length (stest-rows "student" SOURCERY_ID_FIELD_NAME "1")) 0))
 
 (sourcery-test-suite
  "Creation Within Deletion"
  #:before su-create-joe-delete
  #:after  td-complete
- (check-equal? (length (stest-rows "student" "sourcery_id" "1")) 1)
- (check-equal? (first (stest-rows "student" "sourcery_id" "1")) (list 1 "Joe" 1 "TRUE")))
+ (check-equal? (length (stest-rows "student" SOURCERY_ID_FIELD_NAME "1")) 1)
+ (check-equal? (first (stest-rows "student" SOURCERY_ID_FIELD_NAME "1")) (list 1 "Joe" 1 "TRUE")))
 
 (sourcery-test-suite
  "sourcery-load"

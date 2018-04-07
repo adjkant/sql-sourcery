@@ -13,6 +13,7 @@
          "utils.rkt"
          "type-support.rkt"
          (for-syntax racket
+                     "sourcery-connection.rkt"
                      "utils.rkt"))
 
 
@@ -20,16 +21,17 @@
 ;; SQL Query Generation
 
 ;; String String -> String
-;; generate a format string for select by sourcery_id for the given table/field
-(define-for-syntax (gen-accessor-query-format struct-name struct-field)
-  (format "SELECT ~a FROM ~a WHERE sourcery_id = ~~a" struct-name struct-field))
+;; generate a format string for select by SOURCERY_ID_FIELD_NAME for the given table/field
+(define-for-syntax (gen-accessor-query-format struct-field struct-name)
+  (format "SELECT ~a FROM ~a WHERE ~a = ~~a" struct-field struct-name SOURCERY_ID_FIELD_NAME))
 
 ;; Syntax Syntax Syntax -> String
 ;; Given the name of the structure and the fields/types, create a table creation string
 (define-for-syntax (table-creation-string struct-name fields types)
   (format "CREATE TABLE IF NOT EXISTS ~a (~a)"
           (quote-field (id->string struct-name))
-          (string-append "sourcery_id INTEGER PRIMARY KEY AUTOINCREMENT, "
+          (string-append SOURCERY_ID_FIELD_NAME
+                         " INTEGER PRIMARY KEY AUTOINCREMENT, "
                          (comma-separate
                           (map (λ (ft-pair)
                                  (format "~a ~a"
@@ -51,7 +53,7 @@
 (define (get-created-id table-name)
   (get-val-from-row (query-rows (get-sourcery-connection)
                                 (string-append
-                                 "SELECT MAX(sourcery_id) FROM "
+                                 "SELECT MAX(" SOURCERY_ID_FIELD_NAME ") FROM "
                                  (quote-field table-name)))
                     0))
 
@@ -70,8 +72,10 @@
 ;; String Number -> [Maybe [List-of SupportedStructType]]
 (define (get-row table id)
   (let [(rows (query-rows (get-sourcery-connection)
-                          (format "SELECT * FROM ~a WHERE sourcery_id = ~a"
-                                  (quote-field table) id)))]
+                          (format "SELECT * FROM ~a WHERE ~a = ~a"
+                                  (quote-field table)
+                                  SOURCERY_ID_FIELD_NAME
+                                  id)))]
     (if (= 1 (length rows))
         (rest (vector->list (first rows)))
         #false)))
