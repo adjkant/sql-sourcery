@@ -11,27 +11,30 @@
 
 (define froggy (frog-create "green"))
 #;(frog-create )
-(frog-create 1)
+#;(frog-create "green" "mean")
 ;; still runtime
-(frog-create "green" "mean")
+;(frog-create 1)
+
 
 (frog-update froggy "blue")
-#;(frog-update)  ;; needs better error message
-;; still runtime
-(frog-update froggy froggy)
-(frog-update "blue")
+#;(frog-update) 
 (frog-update "blue" "green" "black")
+;; still runtime
+;(frog-update froggy froggy)
+;(frog-update "blue")
+
 
 (frog-color froggy)
 #;(frog-color 1 1)
 #;(frog-color)
 ;; still runtime
-(frog-color 1)
+;(frog-color 1)
 
 (sourcery-load frog)
 #;(sourcery-load)
 #;(sourcery-load 1 2)
 #;(sourcery-load steve)
+
 
 ;;check-syntax
 ;; 9.2
