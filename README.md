@@ -26,10 +26,11 @@ The basic language will aim to properly import a basic functionality similar to 
 #### 2. Semantic Extension
 Once successful, we aim to extend the language with helpful constructs to allow programmers to write semantic programs with syntax and paradigms matching classic lisp conventions while maintaining the mapping and mutability of the database structures. Possible extensions include:
 - [X] add user testing library
-- [ ] unmapped structures and abilty to easily map as needed
-- [ ] Allow database modification to be reset on error to avoid script errors causing database duplication or data vailidy corruption
 - [X] Allowing classical structure use within programs for complex operations
+- [ ] dead-reference?
+- [ ] Allow database modification to be reset on error to avoid script errors causing database duplication or data vailidy corruption
 - [ ] Expand available types
+- [ ] unmapped structures and abilty to easily map as needed (unmapped, map, mapped?)
 
 #### 3. Improving Usability and Increasing Complexity
 Once this has been accomplished, we will consider developing the following features if time permits:

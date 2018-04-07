@@ -9,6 +9,9 @@
  sourcery-delete
  sourcery-filter-delete
 
+ ;; Override normal structures
+ (rename-out [error-check-struct struct])
+
  ;; User Testing
  (all-from-out "user-testing.rkt")
  )
@@ -30,6 +33,17 @@
                      "type-support.rkt"
                      "utils.rkt"
                      "utils-phase-1.rkt"))
+
+
+(define-syntax error-check-struct
+  (syntax-parser
+    [(_ name parts ...)
+     (if (not (sourcery-struct-exists? (id->string #'name)))
+         (begin
+           (add-defined-struct (id->string #'name))
+           #'(struct name parts ...))
+         (error 'struct (format "cannot create a struct with the name of an existing sourcery-struct: ~a"
+                                (id->string #'name))))]))
 
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
@@ -73,10 +87,16 @@
            (define-syntax struct-name
              #,(id->string #'struct-name))
            
-           ;; Check struct does not already exist         
+           ;; Check sourcery-struct does not already exist      
            #,(if (sourcery-struct-exists? (id->string #'struct-name))
                  (error (string-append (id->string #'struct-name) ":")
                         "multiple sourcery-struct definitions")
+                 (void))
+
+           ;; Check sourcery-struct does not share a name with a struct
+           #,(if (struct-defined? (id->string #'struct-name))
+                 (error (string-append (id->string #'struct-name) ":")
+                        "existing structure with same name previously defined")
                  (void))
 
            ;; Check struct has at least one field

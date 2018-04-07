@@ -39,6 +39,8 @@
 ;;check-syntax
 ;; 9.2
 
+#;(struct a [])
 #;(sourcery-struct a [(__a STRING)])
 #;(sourcery-struct a [(create INTEGER) (update INTEGER) (map INTEGER) (unmapped INTEGER)])
+#;(struct student [])
 

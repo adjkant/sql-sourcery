@@ -6,7 +6,10 @@
          get-sourcery-struct-info
          sourcery-struct-exists?
          (struct-out sourcery-ref)
-         valid-sourcery-ref?)
+         valid-sourcery-ref?
+
+         add-defined-struct
+         struct-defined?)
 
 (require "type-support.rkt"
          "sql.rkt"
@@ -85,3 +88,21 @@
     (if (= 1 (length s-s-i))
         (first s-s-i)
         (error 'sourcery-struct (format "struct does not exist: ~a" name)))))
+
+
+;; -----------------------------------------------------------------------
+;; Struct Name Tracking
+
+;; A list of strings representing the names of all defined structures
+(define defined-structs '())
+
+;; String -> Void
+;; Add the given name to the defined structs
+(define (add-defined-struct name)
+  (set! defined-structs (cons name defined-structs)))
+
+;; String -> Boolean
+;; Does this name exist as a previously defined structure?
+(define (struct-defined? name)
+  (member name defined-structs))
+
