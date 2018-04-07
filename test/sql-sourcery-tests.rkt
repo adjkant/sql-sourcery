@@ -205,6 +205,14 @@
  (check-equal? (student-name (first (sourcery-load student))) "Steve Steve"))
 
 (sourcery-test-suite
+ "sourcery-dead-reference?"
+ #:before (action-compose su-create-all su-delete-bob)
+ #:after  td-complete
+ (check-true  (sourcery-dead-reference? bob))
+ (check-false (sourcery-dead-reference? steve))
+ (check-exn exn:fail? (λ () (sourcery-dead-reference? 1)) "Expected sourcery-struct, got: 1"))
+
+(sourcery-test-suite
  ""
  #:before su-create-all
  #:after  td-complete

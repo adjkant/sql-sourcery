@@ -2,12 +2,15 @@
 
 (provide
 
- ;; Sourcery Constructs
+ ;; Sourcery Construct Basics
  sourcery-db
  sourcery-struct
  sourcery-load
  sourcery-delete
+
+ ;; Complex Sourcery Constructs
  sourcery-filter-delete
+ sourcery-dead-reference?
 
  ;; Override normal structures
  (rename-out [error-check-struct struct])
@@ -42,7 +45,8 @@
          (begin
            (add-defined-struct (id->string #'name))
            #'(struct name parts ...))
-         (error 'struct (format "cannot create a struct with the name of an existing sourcery-struct: ~a"
+         (error 'struct (format (string-append "cannot create a struct with the name "
+                                               "of an existing sourcery-struct: ~a")
                                 (id->string #'name))))]))
 
 ;; -----------------------------------------------------------------------
@@ -82,157 +86,157 @@
          ;; Check field names are valid
          (map field-valid? (map id->string (syntax->list #'(field ...))))
          
-       #`(begin
-           ;; Create a syntax object for the struct-name to be used for arrows
-           (define-syntax struct-name
-             #,(id->string #'struct-name))
+         #`(begin
+             ;; Create a syntax object for the struct-name to be used for arrows
+             (define-syntax struct-name
+               #,(id->string #'struct-name))
            
-           ;; Check sourcery-struct does not already exist      
-           #,(if (sourcery-struct-exists? (id->string #'struct-name))
-                 (error (string-append (id->string #'struct-name) ":")
-                        "multiple sourcery-struct definitions")
-                 (void))
+             ;; Check sourcery-struct does not already exist      
+             #,(if (sourcery-struct-exists? (id->string #'struct-name))
+                   (error (string-append (id->string #'struct-name) ":")
+                          "multiple sourcery-struct definitions")
+                   (void))
 
-           ;; Check sourcery-struct does not share a name with a struct
-           #,(if (struct-defined? (id->string #'struct-name))
-                 (error (string-append (id->string #'struct-name) ":")
-                        "existing structure with same name previously defined")
-                 (void))
+             ;; Check sourcery-struct does not share a name with a struct
+             #,(if (struct-defined? (id->string #'struct-name))
+                   (error (string-append (id->string #'struct-name) ":")
+                          "existing structure with same name previously defined")
+                   (void))
 
-           ;; Check struct has at least one field
-           (if (zero? (syntax->datum #'num-fields))
-               (error #,(string-append (id->string #'struct-name) ":")
-                      "sourcery-struct must have at least one field")
-               (void))
+             ;; Check struct has at least one field
+             (if (zero? (syntax->datum #'num-fields))
+                 (error #,(string-append (id->string #'struct-name) ":")
+                        "sourcery-struct must have at least one field")
+                 (void))
 
           
-           ;; Check types of fields in structure defition
-           (let [(res #,(first-failing (compose validate-type symbol->string syntax->datum)
-                                       (compose symbol->string syntax->datum)
-                                       (syntax->list #'(type ...))))]
-             (if (equal? #false res)
-                 (void)
-                 (error #,(string-append (id->string #'struct-name) ":")
-                        (format "bad type given in sourcery-struct definition ~a: ~a"
-                                #,(id->string #'struct-name) res))))
+             ;; Check types of fields in structure defition
+             (let [(res #,(first-failing (compose validate-type symbol->string syntax->datum)
+                                         (compose symbol->string syntax->datum)
+                                         (syntax->list #'(type ...))))]
+               (if (equal? #false res)
+                   (void)
+                   (error #,(string-append (id->string #'struct-name) ":")
+                          (format "bad type given in sourcery-struct definition ~a: ~a"
+                                  #,(id->string #'struct-name) res))))
 
-           ;; Check structure definition does not overwrite previous declaration in database
-           (let [(table-count (first
-                               (first
-                                (rows->lists
-                                 (query-rows (get-sourcery-connection)
-                                             (format (string-append "SELECT count(*) "
-                                                                    "FROM sqlite_master WHERE "
-                                                                    "type='table' AND name='~a'")
-                                                     #,(id->string #'struct-name)))))))]
-             (if (= table-count 1)
-                 (let [(table-info (map (λ (r) (list (second r) (third r)))
-                                        (rows->lists
-                                         (query-rows (get-sourcery-connection)
-                                                     (format "pragma table_info(~a)"
-                                                             #,(quote-field
-                                                                (id->string #'struct-name)))))))
-                       (dec-info
-                        (cons (list SOURCERY_ID_FIELD_NAME "INTEGER")
-                              (map list
-                                   (list (symbol->string (syntax->datum #'field)) ...)
-                                   (list (symbol->string (syntax->datum #'type)) ...))))]
-                   (if (and (= (length table-info) (length dec-info))
-                            (andmap equal? table-info dec-info))
-                       (void)
-                       (error #,(string-append (id->string #'struct-name) ":")
-                              (format (string-append "defition does not match database table: "
-                                                     "expects (sourcery-struct ~a ~a")
-                                      #,(id->string #'struct-name)
-                                      (rest table-info)))))
-                 (begin
-                   ;; Create the table
-                   #,(let
-                         [(creation-string (table-creation-string #'struct-name
-                                                                  #'(field ...)
-                                                                  #'(type ...)))]
-                       #`(query-exec (get-sourcery-connection) #,creation-string))
-                   (void))))
+             ;; Check structure definition does not overwrite previous declaration in database
+             (let [(table-count (first
+                                 (first
+                                  (rows->lists
+                                   (query-rows (get-sourcery-connection)
+                                               (format (string-append "SELECT count(*) "
+                                                                      "FROM sqlite_master WHERE "
+                                                                      "type='table' AND name='~a'")
+                                                       #,(id->string #'struct-name)))))))]
+               (if (= table-count 1)
+                   (let [(table-info (map (λ (r) (list (second r) (third r)))
+                                          (rows->lists
+                                           (query-rows (get-sourcery-connection)
+                                                       (format "pragma table_info(~a)"
+                                                               #,(quote-field
+                                                                  (id->string #'struct-name)))))))
+                         (dec-info
+                          (cons (list SOURCERY_ID_FIELD_NAME "INTEGER")
+                                (map list
+                                     (list (symbol->string (syntax->datum #'field)) ...)
+                                     (list (symbol->string (syntax->datum #'type)) ...))))]
+                     (if (and (= (length table-info) (length dec-info))
+                              (andmap equal? table-info dec-info))
+                         (void)
+                         (error #,(string-append (id->string #'struct-name) ":")
+                                (format (string-append "defition does not match database table: "
+                                                       "expects (sourcery-struct ~a ~a")
+                                        #,(id->string #'struct-name)
+                                        (rest table-info)))))
+                   (begin
+                     ;; Create the table
+                     #,(let
+                           [(creation-string (table-creation-string #'struct-name
+                                                                    #'(field ...)
+                                                                    #'(type ...)))]
+                         #`(query-exec (get-sourcery-connection) #,creation-string))
+                     (void))))
 
-           ;; update sourcery-struct-info at phase 0
-           (update-sourcery-struct-info (list (symbol->string (syntax->datum #'struct-name))
-                                              (list (symbol->string (syntax->datum #'field)) ...)
-                                              (list (symbol->string (syntax->datum #'type)) ...)))
+             ;; update sourcery-struct-info at phase 0
+             (update-sourcery-struct-info (list (symbol->string (syntax->datum #'struct-name))
+                                                (list (symbol->string (syntax->datum #'field)) ...)
+                                                (list (symbol->string (syntax->datum #'type)) ...)))
 
-           ;; update sourcery-struct-info at phase 1
-           #,(update-sourcery-struct-info (list (symbol->string (syntax->datum #'struct-name))
-                                                (map id->string (syntax->list #'(field ...)))
-                                                (map id->string (syntax->list #'(type ...)))))
+             ;; update sourcery-struct-info at phase 1
+             #,(update-sourcery-struct-info (list (symbol->string (syntax->datum #'struct-name))
+                                                  (map id->string (syntax->list #'(field ...)))
+                                                  (map id->string (syntax->list #'(type ...)))))
 
-           ;; Define predicate
-           (define-syntax name-pred
-             (syntax-parser
-               [(_ x)
-                #`(and (sourcery-ref? x)
-                       (string=? (sourcery-ref-table x) #,(id->string #'struct-name))
-                       (list? (get-row (sourcery-ref-table x) (sourcery-ref-id x))))]))
+             ;; Define predicate
+             (define-syntax name-pred
+               (syntax-parser
+                 [(_ x)
+                  #`(and (sourcery-ref? x)
+                         (string=? (sourcery-ref-table x) #,(id->string #'struct-name))
+                         (list? (get-row (sourcery-ref-table x) (sourcery-ref-id x))))]))
          
-           ;; Define create
-           (define-syntax name-create
-             (syntax-parser
-               [(_ ) (error 'struct-create (format "Expected ~a arguments for struct-create"
-                                                   (syntax->datum #'num-fields)))]
-               [(_ . args)
-                (if (= (syntax->datum #'num-fields) (length (syntax->list #'args)))
-                    #`(begin
-                        (let [(arg-vals (list . args))]
-                          ;; Check input types
-                          (#,#,struct-arg-checker arg-vals "create")
+             ;; Define create
+             (define-syntax name-create
+               (syntax-parser
+                 [(_ ) (error 'struct-create (format "Expected ~a arguments for struct-create"
+                                                     (syntax->datum #'num-fields)))]
+                 [(_ . args)
+                  (if (= (syntax->datum #'num-fields) (length (syntax->list #'args)))
+                      #`(begin
+                          (let [(arg-vals (list . args))]
+                            ;; Check input types
+                            (#,#,struct-arg-checker arg-vals "create")
                   
-                          ;; Insert into database
-                          (query-exec (get-sourcery-connection)
-                                      (format "INSERT INTO ~a (~a) VALUES (~a)"
-                                              #,(quote-field (id->string #'struct-name))
-                                              #,(comma-separate (map (λ (f)
-                                                                       (quote-field (id->string f)))
-                                                                     (syntax->list #'(field ...))))
-                                              (comma-separate (map format-sql-type arg-vals)))))
+                            ;; Insert into database
+                            (query-exec (get-sourcery-connection)
+                                        (format "INSERT INTO ~a (~a) VALUES (~a)"
+                                                #,(quote-field (id->string #'struct-name))
+                                                #,(comma-separate (map (λ (f)
+                                                                         (quote-field (id->string f)))
+                                                                       (syntax->list #'(field ...))))
+                                                (comma-separate (map format-sql-type arg-vals)))))
                   
-                        ;; Return a sourcery reference for access to structure
-                        (sourcery-ref #,(id->string #'struct-name)
-                                      (get-created-id #,(id->string #'struct-name))))
-                    (error 'struct-create (format "invalid number of arguments, expected ~a got: ~a"
-                                                  (syntax->datum #'num-fields)
-                                                  (length (syntax->list #'args)))))]))
+                          ;; Return a sourcery reference for access to structure
+                          (sourcery-ref #,(id->string #'struct-name)
+                                        (get-created-id #,(id->string #'struct-name))))
+                      (error 'struct-create (format "invalid number of arguments, expected ~a got: ~a"
+                                                    (syntax->datum #'num-fields)
+                                                    (length (syntax->list #'args)))))]))
          
-           ;; Define accessors
-           #,(generate-accessors #'struct-name
-                                 #'(field ...)
-                                 #'(type ...))
+             ;; Define accessors
+             #,(generate-accessors #'struct-name
+                                   #'(field ...)
+                                   #'(type ...))
 
-           ;; Define updator
-           (define-syntax name-update
-             (syntax-parser
-               [(_ ) (error 'struct-update (format "Expected ~a arguments for struct-update"
-                                                   (+ 1 (syntax->datum #'num-fields))))]
-               [(_ ref . args)
-                (if (= (syntax->datum #'num-fields) (length (syntax->list #'args)))
-                    #`(let [(ref-res ref)
-                            (arg-vals (list . args))]
-                        (begin
-                          ;; Check input types
-                          (#,#,struct-arg-checker arg-vals "update")
+             ;; Define updator
+             (define-syntax name-update
+               (syntax-parser
+                 [(_ ) (error 'struct-update (format "Expected ~a arguments for struct-update"
+                                                     (+ 1 (syntax->datum #'num-fields))))]
+                 [(_ ref . args)
+                  (if (= (syntax->datum #'num-fields) (length (syntax->list #'args)))
+                      #`(let [(ref-res ref)
+                              (arg-vals (list . args))]
+                          (begin
+                            ;; Check input types
+                            (#,#,struct-arg-checker arg-vals "update")
 
-                          ;; Insert into database
-                          (query-exec (get-sourcery-connection)
-                                      (format
-                                       #,(format "UPDATE ~a SET ~~a WHERE ~a = ~~a"
-                                                 (quote-field (id->string #'struct-name))
-                                                 SOURCERY_ID_FIELD_NAME)
-                                       (comma-separate (create-set-values-list #'(field ...)
-                                                                               arg-vals))
-                                       (sourcery-ref-id ref-res)))
+                            ;; Insert into database
+                            (query-exec (get-sourcery-connection)
+                                        (format
+                                         #,(format "UPDATE ~a SET ~~a WHERE ~a = ~~a"
+                                                   (quote-field (id->string #'struct-name))
+                                                   SOURCERY_ID_FIELD_NAME)
+                                         (comma-separate (create-set-values-list #'(field ...)
+                                                                                 arg-vals))
+                                         (sourcery-ref-id ref-res)))
 
-                          ;; Return the same reference
-                          ref-res))
-                    (error 'struct-update (format "invalid number of arguments, expected ~a got: ~a"
-                                                  (+ 1 (syntax->datum #'num-fields))
-                                                  (+ 1 (length (syntax->list #'args))))))])))))]
+                            ;; Return the same reference
+                            ref-res))
+                      (error 'struct-update (format "invalid number of arguments, expected ~a got: ~a"
+                                                    (+ 1 (syntax->datum #'num-fields))
+                                                    (+ 1 (length (syntax->list #'args))))))])))))]
     [else  (error 'sourcery-struct (string-append "expected expression of form (sourcery-struct id "
                                                   "[(field type)..])"))]))
                                                           
@@ -340,3 +344,16 @@
       (error 'sourcery-filter-delete
              (format "Expected list of sourcery-structs, got: ~a" refs))))
 
+
+;; -----------------------------------------------------------------------
+;; -----------------------------------------------------------------------
+;; sourcery-dead-reference?
+;; -----------------------------------------------------------------------
+;; -----------------------------------------------------------------------
+
+;; sourcery-dead-reference
+;; determines if a given sourcery-struct is a valid reference
+(define (sourcery-dead-reference? x)
+  (if (sourcery-ref? x)
+      (not (valid-sourcery-ref? x))
+      (error 'TODO (format "Expected sourcery-struct, got: ~a" x))))
