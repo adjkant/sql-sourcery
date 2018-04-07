@@ -4,7 +4,8 @@
          comma-separate
          id->string
          quote-field
-         unquote-field)
+         unquote-field
+         field-valid?)
 
 
 ;; Id -> String
@@ -45,3 +46,8 @@
 ;; translate a sql field name to a racket field name
 (define (unquote-field f)
   (substring f 1 (- (length f) 2)))
+
+(define (field-valid? f)
+  (if (and (> (string-length f) 1) (string=? (substring f 0 2) "__"))
+      (error 'sourcery-struct (format "Invalid field name: ~a" f))
+      (void)))

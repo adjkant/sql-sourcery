@@ -3,12 +3,15 @@
 (provide
  sourcery-connection
  get-sourcery-connection
- set-sourcery-connection!)
+ set-sourcery-connection!
+ SOURCERY_ID_FIELD_NAME)
 
 (require db)
 
 ;; -----------------------------------------------------------------------
 ;; Database Connection
+
+(define SOURCERY_ID_FIELD_NAME "__sourcery_id")
 
 ;; The single database connection for a SQLSourcery program
 (define sourcery-connection #f)

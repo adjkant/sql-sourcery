@@ -99,6 +99,8 @@ This will create a new structure source or connect to an existing structure sour
 definition. If an existing sourcery-struct deinition with the same name already exists in the database
 but the definition is not identical, an error will be raised.
 
+No field name identifier can start with the characters "__".
+
 A sourcery-struct definition will create the following functions:
 
 @defproc[(struct-name? [x any?])
