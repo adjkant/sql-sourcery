@@ -28,6 +28,7 @@ Once successful, we aim to extend the language with helpful constructs to allow 
 - [X] add user testing library
 - [X] Allowing classical structure use within programs for complex operations
 - [X] dead-reference?
+- [ ] easy sourcery-struct equality check
 - [ ] Allow database modification to be reset on error to avoid script errors causing database duplication or data vailidy corruption
 - [ ] Expand available types
 - [ ] unmapped structures and abilty to easily map as needed (unmapped, map, mapped?)

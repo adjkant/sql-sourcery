@@ -1,11 +1,6 @@
 #lang racket
 
-(provide (all-from-out rackunit)
-         
-         ;; Test Suite Generation and Execution
-         sourcery-test-suite
-         run-sourcery-tests
-
+(provide 
          ;; Action Creation and Composition
          action
          define-action
@@ -16,45 +11,15 @@
          declare-test-vars
          set-test-var!
          clear-test-vars!
-
+         
          ;; Database Teardown
          clear-sourcery-structs)
 
-(require rackunit
-         rackunit/text-ui
-         db
+(require db
          "sourcery-connection.rkt"
          (for-syntax racket
                      syntax/parse
                      "utils.rkt"))
-
-
-;; -----------------------------------------------------------------------
-;; Sourcery Test Suite and Running
-
-;; All tests to run
-(define sourcery-tests '())
-
-;; Any -> Void
-;; Add the given test suite to sourcery-tests
-(define (add-to-tests t)
-  (begin
-    (set! sourcery-tests (cons t sourcery-tests))
-    (void)))
-
-;; Syntax -> Void
-;; Add a test suite to the sourcery-tests
-(define-syntax sourcery-test-suite
-  (syntax-parser
-    [(_ pieces ...)
-     #'(add-to-tests (test-suite pieces ...))]))
-
-;; -> Void
-;; Run all sourcery-tests
-(define (run-sourcery-tests)
-  (begin
-    (define unsuccessful-tests (run-tests (make-test-suite "SQLSourcery Tests" sourcery-tests)))
-    (void)))
 
 
 ;; -----------------------------------------------------------------------
@@ -125,7 +90,7 @@
      #`(if (member #,(id->string #' var) sourcery-test-vars)
            (set! var value)
            (error 'set-test-var! (format "Invalid test variable: ~a" #,(id->string #' var))))]
-    [else #`(error 'set-test-var! "Invalid test variable modification")]))
+    [else #`(error 'set-test-var! "Invalid test variable modification delcaration form")]))
 
 ;; Clear the values of the given test var Id's
 ;; Id ... -> Void

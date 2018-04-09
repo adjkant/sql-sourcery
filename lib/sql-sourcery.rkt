@@ -17,11 +17,16 @@
  (rename-out [error-check-struct struct])
 
  ;; User Testing
+ sourcery-test-suite
+ run-sourcery-tests
  (all-from-out "user-testing.rkt")
+ (all-from-out rackunit)
  )
 
 ;; Language Requirements
 (require db
+         rackunit
+         rackunit/text-ui
          "user-testing.rkt"
          "sourcery-refs.rkt"
          "sourcery-connection.rkt"
@@ -57,17 +62,17 @@
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
 
-;; sourcery-db
+;; sourcery-db: String -> Void
 ;; create a database connection to the given path and set as current connection
-(define-syntax sourcery-db
-  (syntax-parser
-    [(_ path:string)
-     #`(begin
-         ;; Create the new connection
-         (set-sourcery-connection! path)
+(define (sourcery-db db-path)
+  (if (string? db-path)
+      (begin
+        ;; Create the new connection
+        (set-sourcery-connection! db-path)
          
-         ;; recreate all tables in new database if needed
-         (to-void (map
+        ;; recreate all tables in new database if needed
+        (to-void
+         (map
           (λ (s-s-i)
             (let [(table-count (first
                                 (first
@@ -102,8 +107,8 @@
                       (query-exec (get-sourcery-connection) creation-string))
                     (void)))))
           sourcery-struct-info))
-         (void))]
-    [else (error 'sql-sourcery "sourcery-db must take in a single string")]))
+        (void))
+      (error 'sourcery-db "sourcery-db must take in a single string")))
 
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
@@ -399,3 +404,39 @@
   (if (sourcery-ref? x)
       (not (valid-sourcery-ref? x))
       (error 'TODO (format "Expected sourcery-struct, got: ~a" x))))
+
+
+;; -----------------------------------------------------------------------
+;; -----------------------------------------------------------------------
+;; Sourcery Testing Suite
+;; -----------------------------------------------------------------------
+;; -----------------------------------------------------------------------
+
+;; All tests to run
+(define sourcery-tests '())
+
+;; Any -> Void
+;; Add the given test suite to sourcery-tests
+(define (add-to-tests t)
+  (begin
+    (set! sourcery-tests (cons t sourcery-tests))
+    (void)))
+
+;; Syntax -> Void
+;; Add a test suite to the sourcery-tests
+(define-syntax sourcery-test-suite
+  (syntax-parser
+    [(_ pieces ...)
+     #'(add-to-tests (test-suite pieces ...))]))
+
+;; -> Void
+;; Run all sourcery-tests
+(define (run-sourcery-tests test-db-path end-db-path)
+  (if (and (string? test-db-path) (string? end-db-path))
+      (begin
+        (sourcery-db test-db-path)
+        (to-void (run-tests (make-test-suite "SQLSourcery Tests" sourcery-tests)))
+        (sourcery-db end-db-path)
+        (void))
+      (error 'run-sourcery-tests (format "Given paths must be strings: got ~a and ~a"
+                                         test-db-path end-db-path))))

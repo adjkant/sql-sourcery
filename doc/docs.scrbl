@@ -52,8 +52,9 @@ operations besides sourcery structure declarations will throw an error if a data
 
 @defproc[(sourcery-db [db-file-path string?])
          void]{
- Creates a connection to a SQLite database at the given path location that to be used for all
- SQLSourcery operations.
+ Creates a connection to a SQLite database at the given path location to be used for all
+ SQLSourcery operations until the database is changed. Ensure tables exist for all previously defined
+ structures in the program.
  
  Example:
  @codeblock{(sourcery-db "spells.db")}
@@ -431,11 +432,14 @@ _rackunit%2Fmain..rkt%29._test-suite%29%29"
 
 }
 
-@defproc[(run-sourcery-tests) void]{
- Run all of the sourcery-test-suites defined before this call using
+@defproc[(run-sourcery-tests [test-db-path string?] [end-db-path string?]) void]{
+ Set the database using sourcery-db to the given test-db-path and run all of the sourcery-test-suites
+ defined before the call using
  @(hyperlink "https://docs.racket-lang.org/rackunit/api.html?q=test-suite#%28def._%28%28lib.
 _rackunit%2Ftext-ui..rkt%29._run-tests%29%29"
              "run-tests")
+ , setting the database using sourcery-db to the given end-db-path after completion.
+ 
 }
 
 
