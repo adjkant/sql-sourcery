@@ -20,7 +20,7 @@ The basic language will aim to properly import a basic functionality similar to 
 - [X] structure update
 - [X] structure delete
 - [X] sourcery-load
-- [X] sourcery-filter
+- [X] sourcery-filter-delete
 - [X] reserve __ id names and check field name validity
 
 #### 2. Semantic Extension
@@ -28,22 +28,22 @@ Once successful, we aim to extend the language with helpful constructs to allow 
 - [X] add user testing library
 - [X] Allowing classical structure use within programs for complex operations
 - [X] dead-reference?
-- [ ] easy sourcery-struct equality check
-- [ ] Allow database modification to be reset on error to avoid script errors causing database duplication or data vailidy corruption
-- [ ] Expand available types
-- [ ] unmapped structures and abilty to easily map as needed (unmapped, map, mapped?)
+- [X] Expand the language features to closer match Racket than BSL
 
-#### 3. Improving Usability and Increasing Complexity
-Once this has been accomplished, we will consider developing the following features if time permits:
-- [ ] Edit sourcery-load to include where / filtering of loaded results
-- [ ] Allowing user-defined atomic types
-
-#### 4. Additional Ambitions
-
+#### 3. Extending Utilities
 These features are not able to be completed in the immediate future but would be helpful additions to the language or deserve consideration:
-- [ ] Supporting mappings for structures within structures
-- [ ] Expand the language features to closer match Racket than BSL
 - [ ] Create if exists structure create option
+- [ ] easy sourcery-struct equality check
+
+#### 4. Improving Usability and Increasing Complexity
+Future basic additions include:
+- [ ] unmapped structures and abilty to easily map as needed (unmapped, map, mapped?)
+- [ ] Exapnding allowed built-in types and allowing user-defined atomic types
+- [ ] Edit sourcery-load to include where / filtering of loaded results
+- [ ] Allow database modification to be reset on error to avoid script errors causing database duplication or data vailidy corruption
+
+### 5. Additional Ambitions
+These features are important but challenging future work:
+- [ ] list type
+- [ ] Supporting mappings for structures within structures
 - [ ] Life fulfillment
-
-
