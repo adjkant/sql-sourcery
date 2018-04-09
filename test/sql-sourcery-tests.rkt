@@ -100,7 +100,13 @@
  (check-exn exn:fail?
             (λ () (compile #'(begin 
                                (sourcery-struct student [(name STRING)])
-                               (sourcery-struct student [(name STRING)]))))))
+                               (sourcery-struct student [(name STRING)])))))
+ (check-exn exn:fail?
+            (λ () (compile #'(sourcery-struct))))
+ (check-exn exn:fail?
+            (λ () (compile #'(sourcery-struct err [(name INVALIDTYPE)]))))
+ (check-exn exn:fail?
+            (λ () (compile #'(sourcery-struct err_2 [(name)])))))
 
 (sourcery-test-suite
  "Structure Creation"
@@ -111,6 +117,15 @@
                (list 1 "Bob Smith" 90 "FALSE"))
  (check-exn exn:fail? (λ () (student-create 90 90 #false))
             "expected type STRING for name: got 90"))
+
+(sourcery-test-suite
+ "Structure Create Compile Time Errors"
+ #:before su-none
+ #:after  td-none
+ (check-exn exn:fail?
+            (λ () (compile #'(student-create))))
+ (check-exn exn:fail?
+            (λ () (compile #'(student-create "too many" 1 #t "arguments")))))
 
 (sourcery-test-suite
  "Structure Predicates"
@@ -132,6 +147,15 @@
  (check-exn exn:fail? (λ () (student-name ben)) "expected student, given:"))
 
 (sourcery-test-suite
+ "Structure Access Compile Time Errors"
+ #:before su-none
+ #:after  td-none
+ (check-exn exn:fail?
+            (λ () (compile #'(student-name))))
+ (check-exn exn:fail?
+            (λ () (compile #'(student-name bob "extra arguments")))))
+
+(sourcery-test-suite
  "Structure Update"
  #:before (action-compose su-create-all su-update-bob-create-bobby)
  #:after  td-complete
@@ -147,6 +171,15 @@
  (check-equal? (length (stest-rows "student" SOURCERY_ID_FIELD_NAME "1")) 1)
  (check-equal? (first (stest-rows "student" SOURCERY_ID_FIELD_NAME "1")) (list 1 "Joe" 100 "TRUE"))
  (check-equal? (first (stest-rows "student" SOURCERY_ID_FIELD_NAME "2")) (list 2 "John" 100 "FALSE")))
+
+(sourcery-test-suite
+ "Structure Update Compile Time Errors"
+ #:before su-none
+ #:after  td-none
+ (check-exn exn:fail?
+            (λ () (compile #'(student-update))))
+ (check-exn exn:fail?
+            (λ () (compile #'(student-update bob "too many" 1 #t "arguments")))))
 
 (sourcery-test-suite
  "Structure Printer"
@@ -182,6 +215,17 @@
  (check-equal? (student-name (second sourcery-load-results)) "Steve Steve"))
 
 (sourcery-test-suite
+ "Structure Load Compile Time Errors"
+ #:before su-none
+ #:after  td-none
+ (check-exn exn:fail?
+            (λ () (compile #'(sourcery-load))))
+ (check-exn exn:fail?
+            (λ () (compile #'(sourcery-load "too many" "arguments"))))
+ (check-exn exn:fail?
+            (λ () (compile #'(sourcery-load not-a-real-struct)))))
+
+(sourcery-test-suite
  "sourcery-filter-delete None"
  #:before su-create-all
  #:after  td-complete
@@ -211,6 +255,26 @@
  (check-true  (sourcery-dead-reference? bob))
  (check-false (sourcery-dead-reference? steve))
  (check-exn exn:fail? (λ () (sourcery-dead-reference? 1)) "Expected sourcery-struct, got: 1"))
+
+(sourcery-test-suite
+ "Struct/sourcery-struct Creation with same names"
+ #:before su-none
+ #:after  td-none
+ (check-exn exn:fail?
+            (λ () (compile #'(begin
+                               (struct a [])
+                               (sourcery-struct a [(name STRING)])))))
+ (check-exn exn:fail?
+            (λ () (compile #'(begin
+                               (sourcery-struct b [(x STRING)])
+                               (struct b [])))))
+ (check-exn exn:fail?
+            (λ () (compile #'(sourcery-struct x [(__field STRING)]))))
+ (check-exn exn:fail?
+            (λ () (compile #'((sourcery-struct y [(create INTEGER)
+                                                  (update INTEGER)
+                                                  (map INTEGER)
+                                                  (unmapped INTEGER)]))))))
 
 (sourcery-test-suite
  ""
