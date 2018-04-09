@@ -75,6 +75,8 @@
   (syntax-parser
     [(_ struct-name:id [(field:id type:id) ...])
      #:with name-create   (format-id #'struct-name "~a-create" #'struct-name)
+     #:with name-create-if-not-exists
+     (format-id #'struct-name "~a-create-if-not-exists" #'struct-name)
      #:with name-pred     (format-id #'struct-name "~a?" #'struct-name)
      #:with name-update   (format-id #'struct-name "~a-update" #'struct-name)
      #:with name-unmapped (format-id #'struct-name "~a-unmapped" #'struct-name)
@@ -203,6 +205,30 @@
                       (error 'struct-create (format "invalid number of arguments, expected ~a got: ~a"
                                                     (syntax->datum #'num-fields)
                                                     (length (syntax->list #'args)))))]))
+
+             ;; Define create-if-not-exists
+             (define-syntax name-create-if-not-exists
+               (syntax-parser
+                 [(_ ) (error 'struct-create-if-not-exists (format "Expected ~a arguments for struct-create"
+                                                     (syntax->datum #'num-fields)))]
+                 [(_ . args)
+                  (if (= (syntax->datum #'num-fields) (length (syntax->list #'args)))
+                      #`(begin
+                          (let [(arg-vals (list . args))
+                                (query-result (query-rows (get-sourcery-connection)
+                                                          (format "SELECT * FROM ~a WHERE ~a"
+                                                                  #,(quote-field (id->string #'struct-name))
+                                                                  (create-set-values-list #'(field ...)
+                                                                                          args))))]
+                            ;; Check input types
+                            (#,#,struct-arg-checker arg-vals "create")
+                            (if (> (length query-result) 0)
+                                (apply name-create (list . args))
+                                (void))))
+                      (error 'struct-create-if-not-exists (format "invalid number of arguments, expected ~a got: ~a"
+                                                    (syntax->datum #'num-fields)
+                                                    (length (syntax->list #'args)))))]
+                 [else (error 'struct-create-if-not-exists "shit don match")]))
          
              ;; Define accessors
              #,(generate-accessors #'struct-name
