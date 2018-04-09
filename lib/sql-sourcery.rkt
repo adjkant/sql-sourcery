@@ -14,7 +14,7 @@
  sourcery-dead-reference?
 
  ;; Override normal structures
- (rename-out [error-check-struct struct])
+ (rename-out [safe-struct struct])
 
  ;; User Testing
  sourcery-test-suite
@@ -45,20 +45,9 @@
                      "utils-phase-1.rkt"))
 
 
-(define-syntax error-check-struct
-  (syntax-parser
-    [(_ name parts ...)
-     (if (not (sourcery-struct-exists? (id->string #'name)))
-         (begin
-           (add-defined-struct (id->string #'name))
-           #'(struct name parts ...))
-         (error 'struct (format (string-append "cannot create a struct with the name "
-                                               "of an existing sourcery-struct: ~a")
-                                (id->string #'name))))]))
-
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
-;; sourcery-begin and sourcery-db
+;; sourcery-db
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------
 
@@ -109,6 +98,24 @@
           sourcery-struct-info))
         (void))
       (error 'sourcery-db "sourcery-db must take in a single string")))
+
+
+;; -----------------------------------------------------------------------
+;; -----------------------------------------------------------------------
+;; safe-struct
+;; -----------------------------------------------------------------------
+;; -----------------------------------------------------------------------
+
+(define-syntax safe-struct
+  (syntax-parser
+    [(_ name parts ...)
+     (if (not (sourcery-struct-exists? (id->string #'name)))
+         (begin
+           (add-defined-struct (id->string #'name))
+           #'(struct name parts ...))
+         (error 'struct (format (string-append "cannot create a struct with the name "
+                                               "of an existing sourcery-struct: ~a")
+                                (id->string #'name))))]))
 
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------

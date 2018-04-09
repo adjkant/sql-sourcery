@@ -2,14 +2,17 @@
 
 (require "../lib/sql-sourcery.rkt")
 
+(define PROD_DB "prod.db")
+(define TEST_DB "test.db")
+
 ;; Database connection and structure definition
-(sourcery-db "test.db")
+(sourcery-db TEST_DB)
 (sourcery-struct student [(name STRING) (grade INTEGER) (failing BOOLEAN)])
 (sourcery-struct prof [(name STRING)])
 
 ;; Using testing library with test connection
 (require "sql-sourcery-test-lib.rkt")
-(stest-conn "test.db")
+(stest-conn TEST_DB)
 
 ;; Defile Display/Print/Write files
 (define display-file (gen-output-file "outputs/display.txt"))
@@ -283,8 +286,9 @@
  )
 
 ;; Run all tests
-(run-sourcery-tests)
+(run-sourcery-tests TEST_DB PROD_DB)
 
-;; Delete testing database
-(stest-teardown "test.db")
+;; Delete databases
+(stest-teardown TEST_DB)
+(stest-teardown PROD_DB)
 

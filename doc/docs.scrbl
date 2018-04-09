@@ -351,7 +351,7 @@ using a testing database via a call to sourcery-db at the start of the module
  Create a single action that executes the given actions from left to right.
 
  @examples[#:eval sourcery-eval
-           #:label ":Example"
+           #:label "Example:"
            (declare-test-vars v1 v2)
            (define-action v-action-1 (set-test-var! v1 1))
            (define-action v-action-2 (set-test-var! v2 2))
@@ -425,10 +425,10 @@ _rackunit%2Fmain..rkt%29._test-suite%29%29"
  @(racketblock
    (sourcery-test-suite
     "A sourcery-test-suite using fictional actions"
-    #:before su-create-all ;; create students and load into sourcery-load-results
-    #:after  td-complete ;; remove students and unset all testing varaibles
-    (check-equal? (student-name (first sourcery-load-results)) "Bob Smith")
-    (check-equal? (student-name (second sourcery-load-results)) "Steve Steve")))
+    #:before su-create-all ;; create spells and load into sourcery-load-results
+    #:after  td-complete ;; remove spells and clear all testing varaibles
+    (check-equal? (spell-name (first sourcery-load-results)) "Summon Bees")
+    (check-equal? (spell-name (second sourcery-load-results)) "Create Pig Tail On A Dursley")))
 
 }
 
