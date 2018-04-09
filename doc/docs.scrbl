@@ -70,7 +70,8 @@ operations besides sourcery structure declarations will throw an error if a data
 
 A sourcery-struct acts as a typical structure with added database persistence.
 
-@defform[(sourcery-struct struct-name [(field-name type) ...])
+@defform[(sourcery-struct struct-name
+                          [(field-name type) (field-name type) ...])
          #:contracts([struct-name id?]
                      [field-name id?]
                      [type acceptable-struct-type?])

@@ -292,7 +292,7 @@
                                                     (+ 1 (syntax->datum #'num-fields))
                                                     (+ 1 (length (syntax->list #'args))))))])))))]
     [else  (error 'sourcery-struct (string-append "expected expression of form (sourcery-struct id "
-                                                  "[(field type)..])"))]))
+                                                  "[(field type) (field type) ...])"))]))
                                                           
 
 ;; -----------------------------------------------------------------------
