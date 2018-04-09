@@ -40,7 +40,10 @@ A SQLSourcery programmer is a sourcerer.
 @;{------------------------------------------------------------------------------------------------}
 @section{Motivation}
 
-TODO.
+Racket programs require lots of boilerplate for any sort of basic I/O persistency, and getting this
+I/O to fit into a functional style causes many additional problems. SQLSourcery attempts to allow a
+sourcerer to easily spin up state persistency of their structures that can fit into their coding
+paradigms with minimal adaptation.
 
 @;{------------------------------------------------------------------------------------------------}
 @section{Database Connection}
@@ -368,7 +371,7 @@ using a testing database via a call to sourcery-db at the start of the module
 @defform[(define-composed-action [name id?] [[action action?] ...])]{
  Define an action with the given name by composing the given actions.
 
-  @examples[#:eval sourcery-eval
+ @examples[#:eval sourcery-eval
            #:hidden
            (set-test-var! v1 #f)
            (set-test-var! v2 #f)] 
@@ -478,25 +481,26 @@ to use multiple references to the same value, it is the responsibility of the so
 of the status of references.
 
 
-@;{-------------------------------------------------------------}
-@section{SQLSourcery Paradigms}
+@;{
+ @;{-------------------------------------------------------------}
+ @section{SQLSourcery Paradigms}
 
-There are a few main paradigms that are suggested for SQLSourcery programs:
+ There are a few main paradigms that are suggested for SQLSourcery programs:
 
-@subsection{Complete Integration}
+ @subsection{Complete Integration}
 
-TODO
+ TODO
 
-@subsection{Loading and Saving}
+ @subsection{Loading and Saving}
 
-TODO
+ TODO
 
-@subsection{Task Scripts}
+ @subsection{Task Scripts}
 
-TODO
+ TODO
 
-@subsection{Relational Mapping}
+ @subsection{Relational Mapping}
 
-TODO
-
+ TODO
+}
 
