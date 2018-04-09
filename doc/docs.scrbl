@@ -43,18 +43,6 @@ A SQLSourcery programmer is a sourcerer.
 TODO.
 
 @;{------------------------------------------------------------------------------------------------}
-@section{Grammar}
-
-@(racketgrammar*
-
-  [we
-   (can n) put ...]
-
-  [stuff
-   (here id expr)
-   (and here)])
-
-@;{------------------------------------------------------------------------------------------------}
 @section{Database Connection}
 
 SQLSourcery programs must first connect to a SQLite database. It is typical to set the database at the
