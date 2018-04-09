@@ -5,10 +5,15 @@
          id->string
          quote-field
          unquote-field
-         field-valid?)
+         field-valid?
+         to-void)
 
 (require "sourcery-connection.rkt")
 
+;; Any -> Void
+;; Take any result and make it void
+(define (to-void x)
+  (void))
 
 ;; Id -> String
 ;; Convert an identifier to a string

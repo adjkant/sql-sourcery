@@ -4,9 +4,9 @@
          get-row
          get-val-from-row
          create-set-values-list
-         
-         (for-syntax table-creation-string
-                     gen-accessor-query-format))
+         table-creation-string
+         table-creation-string-syntax
+         gen-accessor-query-format)
 
 (require db
          "sourcery-connection.rkt"
@@ -22,22 +22,29 @@
 
 ;; String String -> String
 ;; generate a format string for select by SOURCERY_ID_FIELD_NAME for the given table/field
-(define-for-syntax (gen-accessor-query-format struct-field struct-name)
+(define (gen-accessor-query-format struct-field struct-name)
   (format "SELECT ~a FROM ~a WHERE ~a = ~~a" struct-field struct-name SOURCERY_ID_FIELD_NAME))
+
+;; String [List-of String] [List-of String] -> String
+;; Given the name of the structure and the fields/types, create a table creation string
+(define (table-creation-string struct-name fields types)
+  (format "CREATE TABLE IF NOT EXISTS ~a (~a)"
+          (quote-field struct-name)
+          (string-append SOURCERY_ID_FIELD_NAME
+                         " INTEGER PRIMARY KEY AUTOINCREMENT, "
+                         (comma-separate (map (λ (f t) (format "~a ~a" (quote-field f) t))
+                                              fields types)))))
 
 ;; Syntax Syntax Syntax -> String
 ;; Given the name of the structure and the fields/types, create a table creation string
-(define-for-syntax (table-creation-string struct-name fields types)
+(define (table-creation-string-syntax struct-name fields types)
   (format "CREATE TABLE IF NOT EXISTS ~a (~a)"
           (quote-field (id->string struct-name))
           (string-append SOURCERY_ID_FIELD_NAME
                          " INTEGER PRIMARY KEY AUTOINCREMENT, "
                          (comma-separate
-                          (map (λ (ft-pair)
-                                 (format "~a ~a"
-                                         (quote-field (id->string (first ft-pair)))
-                                         (id->string (second ft-pair))))
-                               (map list (syntax->list fields) (syntax->list types)))))))
+                          (map (λ (f t) (format "~a ~a" (quote-field (id->string f)) (id->string t)))
+                               (syntax->list fields) (syntax->list types))))))
 
 ;; -----------------------------------------------------------------------
 ;; -----------------------------------------------------------------------

@@ -87,7 +87,7 @@
   (let [(s-s-i (filter (λ (x) (string=? name (first x))) sourcery-struct-info))]
     (if (= 1 (length s-s-i))
         (first s-s-i)
-        (error 'sourcery-struct (format "struct does not exist: ~a" name)))))
+        (error 'sourcery-struct (format "sourcery-struct does not exist: ~a" name)))))
 
 
 ;; -----------------------------------------------------------------------

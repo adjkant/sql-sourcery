@@ -1,3 +1,4 @@
+
 #lang racket
 
 (provide
@@ -34,6 +35,7 @@
                      "sourcery-refs.rkt"
                      "sourcery-connection.rkt"
                      "type-support.rkt"
+                     "sql.rkt"
                      "utils.rkt"
                      "utils-phase-1.rkt"))
 
@@ -60,7 +62,47 @@
 (define-syntax sourcery-db
   (syntax-parser
     [(_ path:string)
-     #'(set-sourcery-connection! path)]
+     #`(begin
+         ;; Create the new connection
+         (set-sourcery-connection! path)
+         
+         ;; recreate all tables in new database if needed
+         (to-void (map
+          (λ (s-s-i)
+            (let [(table-count (first
+                                (first
+                                 (rows->lists
+                                  (query-rows (get-sourcery-connection)
+                                              (format (string-append "SELECT count(*) "
+                                                                     "FROM sqlite_master WHERE "
+                                                                     "type='table' AND name='~a'")
+                                                      (first s-s-i)))))))]
+              (if (= table-count 1)
+                  (let [(table-info (map (λ (r) (list (second r) (third r)))
+                                         (rows->lists
+                                          (query-rows (get-sourcery-connection)
+                                                      (format "pragma table_info(~a)"
+                                                              (quote-field (first s-s-i)))))))
+                        (dec-info
+                         (cons (list SOURCERY_ID_FIELD_NAME "INTEGER")
+                               (map list (second s-s-i) (third s-s-i))))]
+                    (if (and (= (length table-info) (length dec-info))
+                             (andmap equal? table-info dec-info))
+                        (void)
+                        (error 'sourcery-db
+                               (format (string-append "changed over to database with "
+                                                      "incompatible table definition: ~a")
+                                       (first s-s-i)))))
+                  ;; Create the table
+                  (begin
+                    (let
+                        [(creation-string (table-creation-string (first s-s-i)
+                                                                 (second s-s-i)
+                                                                 (third s-s-i)))]
+                      (query-exec (get-sourcery-connection) creation-string))
+                    (void)))))
+          sourcery-struct-info))
+         (void))]
     [else (error 'sql-sourcery "sourcery-db must take in a single string")]))
 
 ;; -----------------------------------------------------------------------
@@ -152,9 +194,9 @@
                    (begin
                      ;; Create the table
                      #,(let
-                           [(creation-string (table-creation-string #'struct-name
-                                                                    #'(field ...)
-                                                                    #'(type ...)))]
+                           [(creation-string (table-creation-string-syntax #'struct-name
+                                                                           #'(field ...)
+                                                                           #'(type ...)))]
                          #`(query-exec (get-sourcery-connection) #,creation-string))
                      (void))))
 
