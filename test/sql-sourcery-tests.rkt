@@ -77,7 +77,7 @@
 ;; Language Tests
 
 (sourcery-test-suite
- "Table Vailidity"
+ "Table Validity"
  #:before su-none
  #:after  td-none
  (check-true (stest-table? "student"))

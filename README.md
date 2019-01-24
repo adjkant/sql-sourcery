@@ -47,3 +47,6 @@ These features are important but challenging future work:
 - [ ] list type
 - [ ] Supporting mappings for structures within structures
 - [ ] Life fulfillment
+
+###### Feedback
+- [ ] reference-equal? 

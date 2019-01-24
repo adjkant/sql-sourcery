@@ -1,4 +1,3 @@
-
 #lang racket
 
 (provide
@@ -156,7 +155,7 @@
                    (error (string-append (id->string #'struct-name) ":")
                           "existing structure with same name previously defined")
                    (void))
-
+             ;; when / unless
              ;; Check struct has at least one field
              (if (zero? (syntax->datum #'num-fields))
                  (error #,(string-append (id->string #'struct-name) ":")

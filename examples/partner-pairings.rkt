@@ -25,12 +25,16 @@
     (set-test-var! pairings (equal-pair-students students))))
 
 
-;; A Pair is a (make-pairing String String) where the two strings are the two names of students
+;; A Pair is a (make-pairing String String) where the two strings are the two names
+;; of students
 (sourcery-struct pairing [(name1 STRING) (name2 STRING)])
 
-;; A Student is a (make-student String Integer Integer Boolean) with a name, homework grade,
-;; exam grade, and a boolean telling if they are nice
-(sourcery-struct student [(name STRING) (hw-grade INTEGER) (exam-grade INTEGER) (nice? BOOLEAN)])
+;; A Student is a (make-student String Integer Integer Boolean) with a name,
+;; homework grade, exam grade, and a boolean telling if they are nice
+(sourcery-struct student [(name STRING)
+                          (hw-grade INTEGER)
+                          (exam-grade INTEGER)
+                          (nice? BOOLEAN)])
 
 ;; Student Student -> Pair
 ;; create a pairing of two students
@@ -55,7 +59,8 @@
 
 
 ;; [List-of Student] -> [List-of Pair]
-;; pair all students based on matching average hw and exam grades, leaving the best student unpaired
+;; pair all students based on matching average hw and exam grades, leaving the
+;; best student unpaired
 (define (equal-pair-students los)
   (pair-in-order
    (sort los
