@@ -5,7 +5,7 @@ SQLSourcery is an ORM for mapping structures in Racket to database entries in a 
 
 ### Current Status
 
-SQLSourcery is still in a prototype state under active development in conjunction with [WebSourcery](https://github.com/adjkant/sql-sourcery). Currently the basic structure mapping is complete along with basic tools for working with SQLSourcery structures. The language also includes testing tooling.
+SQLSourcery is still in a prototype state under active development in conjunction with [WebSourcery](https://github.com/adjkant/web-sourcery). Currently the basic structure mapping is complete along with basic tools for working with SQLSourcery structures. The language also includes testing tooling.
 
 ### Roadmap
 
