@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../lib/sql-sourcery.rkt")
+(require "../main.rkt")
 
 (define PROD_DB "prod.db")
 (define TEST_DB "test.db")
@@ -15,8 +15,8 @@
 (stest-conn TEST_DB)
 
 ;; Defile Display/Print/Write files
-(define display-file (gen-output-file "outputs/display.txt"))
-(define dead-ref-display-file (gen-output-file "outputs/display-dead-ref.txt"))
+(define display-file (gen-output-file "display.txt"))
+(define dead-ref-display-file (gen-output-file "display-dead-ref.txt"))
 
 ;; -----------------------------------------------------------------------
 ;; Results, Setup, and Teardown Library
@@ -291,4 +291,8 @@
 ;; Delete databases
 (stest-teardown TEST_DB)
 (stest-teardown PROD_DB)
+
+;; Delete Files
+(delete-file "display.txt")
+(delete-file "display-dead-ref.txt")
 

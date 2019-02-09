@@ -18,7 +18,7 @@
  ;; User Testing
  sourcery-test-suite
  run-sourcery-tests
- (all-from-out "user-testing.rkt")
+ (all-from-out "lib/user-testing.rkt")
  (all-from-out rackunit)
  )
 
@@ -26,22 +26,22 @@
 (require db
          rackunit
          rackunit/text-ui
-         "user-testing.rkt"
-         "sourcery-refs.rkt"
-         "sourcery-connection.rkt"
-         "sql.rkt"
-         "type-support.rkt"
-         "utils.rkt"
+         "lib/user-testing.rkt"
+         "lib/sourcery-refs.rkt"
+         "lib/sourcery-connection.rkt"
+         "lib/sql.rkt"
+         "lib/type-support.rkt"
+         "lib/utils.rkt"
          (for-syntax syntax/parse
                      racket/syntax
                      racket
                      db
-                     "sourcery-refs.rkt"
-                     "sourcery-connection.rkt"
-                     "type-support.rkt"
-                     "sql.rkt"
-                     "utils.rkt"
-                     "utils-phase-1.rkt"))
+                     "lib/sourcery-refs.rkt"
+                     "lib/sourcery-connection.rkt"
+                     "lib/type-support.rkt"
+                     "lib/sql.rkt"
+                     "lib/utils.rkt"
+                     "lib/utils-phase-1.rkt"))
 
 
 ;; -----------------------------------------------------------------------

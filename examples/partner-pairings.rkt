@@ -1,5 +1,5 @@
 #lang racket
-(require "../lib/sql-sourcery.rkt")
+(require "../main.rkt")
 
 (define PROD_DB "partner-pairings.db")
 (define TEST_DB "test.db")

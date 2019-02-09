@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../lib/sql-sourcery.rkt")
+(require "../main.rkt")
 (sourcery-db "simple-example-1.db")
 
 ;; map users to db with given types

@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../../lib/sql-sourcery.rkt")
+(require "../main.rkt")
 (sourcery-db "test-1.db")
 
 ;; sourcery-struct
@@ -13,22 +13,22 @@
 #;(frog-create )
 #;(frog-create "green" "mean")
 ;; still runtime
-;(frog-create 1)
+#;(frog-create 1)
 
 
 (frog-update froggy "blue")
 #;(frog-update) 
-(frog-update "blue" "green" "black")
+#;(frog-update "blue" "green" "black")
 ;; still runtime
-;(frog-update froggy froggy)
-;(frog-update "blue")
+#;(frog-update froggy froggy)
+#;(frog-update "blue")
 
 
 (frog-color froggy)
 #;(frog-color 1 1)
 #;(frog-color)
 ;; still runtime
-;(frog-color 1)
+#;(frog-color 1)
 
 (sourcery-load frog)
 #;(sourcery-load)
@@ -36,7 +36,7 @@
 #;(sourcery-load steve)
 
 
-;;check-syntax
+;; check-syntax
 ;; 9.2
 
 #;(struct a [])
