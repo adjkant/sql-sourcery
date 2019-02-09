@@ -4,8 +4,9 @@
 @;{Requirements} 
 
 @(require scribble/example
-          racket/sandbox)
-@(require "../lib/sql-sourcery.rkt")
+          racket/sandbox
+          "../main.rkt"
+          (for-label "../main.rkt"))
 
 @;{------------------------------------------------------------------------------------------------}
 @;{Sandbox Setup} 
@@ -16,12 +17,11 @@
                   [sandbox-memory-limit 50])
      (sandbox-path-permissions (list (list 'write "../")))
      (make-evaluator 'racket
-                     #:requires (list "../lib/sql-sourcery.rkt")
-                     #:allow-for-require (list "../lib/sql-sourcery.rkt"))))
+                     #:requires (list "main.rkt"))))
 
 @examples[#:eval sourcery-eval
           #:hidden
-          (delete-file "docs.db")
+          (when (file-exists? "docs.db") (delete-file "docs.db"))
           (sourcery-db "docs.db")
           (sourcery-struct spell [(name STRING) (power INTEGER) (deadly? BOOLEAN)])]
 
@@ -39,6 +39,8 @@ A SQLSourcery programmer is a sourcerer.
 
 @(hyperlink "https://github.com/adjkant/sql-sourcery"
              "Github Repo")
+
+@defmodule[sql-sourcery]
 
 @;{------------------------------------------------------------------------------------------------}
 @section{Motivation}
