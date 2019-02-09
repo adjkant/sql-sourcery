@@ -37,6 +37,9 @@
 Database backed structs for functional programmers.
 A SQLSourcery programmer is a sourcerer.
 
+@(hyperlink "https://github.com/adjkant/sql-sourcery"
+             "Github Repo")
+
 @;{------------------------------------------------------------------------------------------------}
 @section{Motivation}
 
