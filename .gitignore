@@ -10,14 +10,6 @@ compiled
 # Database files
 *.db
 
-# Test Output Files
-test/outputs/
-lib/outputs/
-
-# Test Debug File
-test/debug-testing.rkt
-test/debug/debug-testing.rkt
-
 # Docs Output
 sql-sourcery/scribblings/*
 !sql-sourcery/scribblings/sql-sourcery.scrbl
