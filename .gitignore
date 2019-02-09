@@ -12,6 +12,7 @@ compiled
 
 # Test Output Files
 test/outputs/
+lib/outputs/
 
 # Test Debug File
 test/debug-testing.rkt
@@ -19,4 +20,4 @@ test/debug/debug-testing.rkt
 
 # Docs Output
 doc/*
-!doc/docs.scbl
+!doc/sql-sourcery.scrbl
