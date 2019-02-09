@@ -4,8 +4,9 @@
 @;{Requirements} 
 
 @(require scribble/example
-          racket/sandbox)
-@(require "../main.rkt")
+          racket/sandbox
+          "../main.rkt"
+          (for-label "../main.rkt"))
 
 @;{------------------------------------------------------------------------------------------------}
 @;{Sandbox Setup} 
@@ -38,6 +39,8 @@ A SQLSourcery programmer is a sourcerer.
 
 @(hyperlink "https://github.com/adjkant/sql-sourcery"
              "Github Repo")
+
+@defmodule[sql-sourcery]
 
 @;{------------------------------------------------------------------------------------------------}
 @section{Motivation}

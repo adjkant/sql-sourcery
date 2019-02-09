@@ -19,5 +19,5 @@ test/debug-testing.rkt
 test/debug/debug-testing.rkt
 
 # Docs Output
-doc/*
-!doc/sql-sourcery.scrbl
+sql-sourcery/scribblings/*
+!sql-sourcery/scribblings/sql-sourcery.scrbl

@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../main.rkt")
+(require "../sql-sourcery/main.rkt")
 
 (define PROD_DB "prod.db")
 (define TEST_DB "test.db")

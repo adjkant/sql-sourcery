@@ -30,7 +30,7 @@
 ;; Internal Requirements
 (require rackunit
          db
-         "../lib/sourcery-connection.rkt")
+         "../sql-sourcery/sourcery-connection.rkt")
 
 
 ;; -----------------------------------------------------------------------

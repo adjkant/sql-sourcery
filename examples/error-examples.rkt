@@ -1,6 +1,6 @@
 #lang racket
 
-(require "../main.rkt")
+(require "../sql-sourcery/main.rkt")
 (sourcery-db "err-examples.db")
 
 ;; ----------------------------------------------------------------------------
