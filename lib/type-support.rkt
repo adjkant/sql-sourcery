@@ -15,24 +15,24 @@
 ;; -----------------------------------------------------------------------
 ;; Type Checking Generation
 
-;; Syntax Syntax Syntax -> [[List-of Any] String -> Void]
+;; Syntax Syntax Syntax -> [Syntax-of [[List-of Any] String -> Void]]
 ;; create function to check arguments for structure creation
 (define-for-syntax (create-arg-type-checker struct-name fields types)
   (let* [(field-strings (map symbol->string (map syntax->datum (syntax->list fields))))
          (type-strings (map symbol->string (map syntax->datum (syntax->list types))))
          (type-preds (map type->predicate type-strings))
          (struct-name-string (id->string struct-name))]
-    (λ (args call)
+    #`(lambda (args call)
       (begin
         (map (λ (f t pred a)
                (if (pred a)
                    (void)
-                   (error (string-append struct-name-string "-" call ":")
+                   (error (string-append #,struct-name-string "-" call ":")
                           (format "expected type ~a for ~a: got ~v"
                                   t f a))))
-             field-strings
-             type-strings
-             type-preds
+             #,(cons #'list field-strings)
+             #,(cons #'list type-strings)
+             #,(cons #'list type-preds)
              args)
         (void)))))
 
